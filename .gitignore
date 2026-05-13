@@ -1,1 +1,64 @@
+# ==========================================
+# DEPENDENCIAS Y ENTORNOS VIRTUALES
+# ==========================================
+# Frontend (Node.js)
+node_modules/
+.pnp
+.pnp.js
 
+# Backend (Python)
+venv/
+.venv/
+env/
+__pycache__/
+*.py[cod]
+*$py.class
+
+# ==========================================
+# VARIABLES DE ENTORNO Y SECRETOS (CRÍTICO)
+# ==========================================
+# Ignora cualquier archivo .env en cualquier parte del proyecto
+.env
+.env.*
+!.env.example
+
+# ==========================================
+# ARCHIVOS DE CONSTRUCCIÓN Y PRODUCCIÓN
+# ==========================================
+# Frontend (Vite/React genera la carpeta dist)
+dist/
+dist-ssr/
+build/
+
+# ==========================================
+# LOGS Y CACHÉ
+# ==========================================
+# Frontend
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Backend
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Vite/Eslint/TypeScript
+.eslintcache
+tsbuildinfo
+*.tsbuildinfo
+
+# ==========================================
+# EDITORES DE CÓDIGO Y SISTEMAS OPERATIVOS
+# ==========================================
+# VS Code
+.vscode/
+*.code-workspace
+
+# IntelliJ / PyCharm / WebStorm
+.idea/
+
+# Mac / Windows
+.DS_Store
+Thumbs.db
