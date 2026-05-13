@@ -86,3 +86,46 @@ sudo dnf install nodejs npm
    ```bash
    npm run dev
    ```
+
+## Contributing
+
+### Branch Naming
+
+Work on a separate branch for each feature or fix. Use the format:
+```
+type/part-of-project/what-you-are-doing
+```
+
+Examples:
+- `feat/backend/user-authentication`
+- `fix/frontend/editor-crash`
+- `docs/api/endpoints`
+
+### Commit Messages
+
+Use [Conventional Commits](https://www.conventionalcommits.org/) format:
+
+```
+type(scope): brief summary
+
+Detailed description (optional)
+```
+
+**Types:**
+- `feat` - New feature
+- `fix` - Bug fix
+- `docs` - Documentation
+- `refactor` - Code refactoring
+
+Examples:
+```
+feat/backend: add user login endpoint
+fix/frontend: resolve editor crash on save
+docs(api): update authentication docs
+```
+
+### Pull Requests
+
+1. Submit a pull request to the `main` branch
+2. Wait for review and approval from another contributor
+3. Resolve any feedback before merging
