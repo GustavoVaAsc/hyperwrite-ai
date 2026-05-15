@@ -4,7 +4,7 @@ An Agentic AI document editor! (we're trying lol)
 
 ## Architecture
 
-[architecture](readme-media/hyperwritev1.png)
+![architecture](readme-media/hyperwritev1.png)
 
 ## Setup
 
