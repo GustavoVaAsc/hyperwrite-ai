@@ -8,19 +8,63 @@ An Agentic AI document editor! (we're trying lol)
 
 ## Setup
 
-### Backend
+### 1. Docker Configuration
 
-1. Navigate to the backend directory:
+1. Install [Docker](https://docs.docker.com/get-docker/) and [Docker Compose](https://docs.docker.com/compose/install/)
+
+2. Navigate to the backend directory:
    ```bash
    cd backend
    ```
 
-2. Create a virtual environment:
+3. Create your `.env` file based on `.env.example`:
+   ```bash
+   cp .env.example .env
+   ```
+
+4. **Important:** Update the following values in `.env` with secure credentials:
+   - `POSTGRES_PASSWORD` - Set a strong password for the database
+   - `DATABASE_URL` - Update the password in the connection string to match
+
+   Your `.env` should look like:
+   ```env
+   # CORS Configuration
+   CORS_ORIGINS=http://localhost:5173
+   CORS_CREDENTIALS=true
+   CORS_METHODS=*
+   CORS_HEADERS=*
+
+   # Database credentials
+   POSTGRES_USER=hyperwrite
+   POSTGRES_PASSWORD=your_secure_password
+   POSTGRES_DB=hyperwrite
+   DATABASE_URL=postgresql+asyncpg://hyperwrite:your_secure_password@db:5432/hyperwrite
+   ```
+
+5. Start the Docker containers:
+   ```bash
+   docker-compose up -d
+   ```
+
+6. Verify the services are running:
+   ```bash
+   docker-compose ps
+   ```
+
+### 2. Backend Setup (Optional - Docker recommended)
+
+The backend runs via Docker by default. Use local setup only when:
+
+- **Debugging** - Step-through debugging with an IDE
+- **Without Docker** - If Docker is not available
+- **Understanding the stack** - Useful for learning the backend architecture
+
+1. Create a virtual environment:
    ```bash
    python -m venv venv
    ```
 
-3. Activate the virtual environment:
+2. Activate the virtual environment:
    - Linux/macOS:
      ```bash
      source venv/bin/activate
@@ -30,43 +74,39 @@ An Agentic AI document editor! (we're trying lol)
      venv\Scripts\activate
      ```
 
-4. Install dependencies (all required packages are already listed in `requirements.txt`):
+3. Install dependencies:
    ```bash
    pip install -r requirements.txt
    ```
 
-5. Create your environment file:
-   ```bash
-   cp .env.example .env
-   ```
-
-6. Run the development server:
+4. Run the development server:
    ```bash
    uvicorn main:app --reload
    ```
 
-### Frontend
+### 3. Frontend Setup
 
-#### Installing Node.js and npm
+#### Installing Node.js and pnpm
 
 **Windows:**
 1. Download the installer from [nodejs.org](https://nodejs.org/)
 2. Run the installer and follow the prompts
-3. Verify installation:
+3. Install pnpm:
    ```bash
-   node --version
-   npm --version
+   npm install -g pnpm
    ```
 
 **Ubuntu/Debian:**
 ```bash
 sudo apt update
 sudo apt install nodejs npm
+npm install -g pnpm
 ```
 
 **Fedora:**
 ```bash
 sudo dnf install nodejs npm
+npm install -g pnpm
 ```
 
 #### Running the Frontend
@@ -78,7 +118,7 @@ sudo dnf install nodejs npm
 
 2. Install dependencies:
    ```bash
-   npm install
+   pnpm install
    ```
 
 3. Create your environment file:
@@ -88,7 +128,7 @@ sudo dnf install nodejs npm
 
 4. Run the development server:
    ```bash
-   npm run dev
+   pnpm run dev
    ```
 
 ## Contributing
