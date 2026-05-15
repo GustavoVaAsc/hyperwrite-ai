@@ -2,10 +2,89 @@
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
-Currently, two official plugins are available:
+## Tanstack Router
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+This project uses [Tanstack Router](https://tanstack.com/router/latest) for routing.
+
+### Overview
+
+Routing is configured in `src/routes.ts` with components in `src/components/`.
+
+### File Structure
+
+```
+src/
+├── routes.ts           # Route tree definition
+├── components/         # Page components
+│   ├── RootLayout.tsx  # Layout with <Outlet /> for child routes
+│   └── Home.tsx        # Home page component
+└── main.tsx           # App entry with RouterProvider
+```
+
+### Adding Routes
+
+1. **Create a component** in `src/components/`:
+   ```tsx
+   export function MyPage() {
+     return <div>My Page</div>
+   }
+   ```
+
+2. **Add the route** in `src/routes.ts`:
+   ```typescript
+   import { createRouter, createRoute, createRootRoute } from '@tanstack/react-router'
+   import { RootLayout } from './components/RootLayout'
+   import { Home } from './components/Home'
+   import { MyPage } from './components/MyPage'
+
+   export const rootRoute = createRootRoute({
+     component: RootLayout,
+   })
+
+   // Add child routes
+   export const indexRoute = createRoute({
+     getParentRoute: () => rootRoute,
+     path: '/',
+     component: Home,
+   })
+
+   export const myPageRoute = createRoute({
+     getParentRoute: () => rootRoute,
+     path: '/my-page',
+     component: MyPage,
+   })
+
+   export const routeTree = rootRoute.addChildren([
+     indexRoute,
+     myPageRoute,
+   ])
+
+   export const router = createRouter({ routeTree })
+
+   declare module '@tanstack/react-router' {
+     interface Register {
+       router: typeof router
+     }
+   }
+   ```
+
+3. **Navigate** using the `link` component or `navigate`:
+   ```tsx
+   import { Link, useNavigate } from '@tanstack/react-router'
+
+   // Declarative navigation
+   <Link to="/">Home</Link>
+
+   // Programmatic navigation
+   const navigate = useNavigate()
+   navigate({ to: '/my-page' })
+   ```
+
+### Route Types
+
+Tanstack Router provides full type safety. When calling `router.navigate({ to: '/my-page' })`, TypeScript will error if the route doesn't exist.
+
+---
 
 ## React Compiler
 

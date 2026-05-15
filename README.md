@@ -111,6 +111,8 @@ npm install -g pnpm
 
 #### Running the Frontend
 
+> **Note:** This project uses [Tanstack Router](frontend/README.md#tanstack-router) for routing.
+
 1. Navigate to the frontend directory:
    ```bash
    cd frontend
