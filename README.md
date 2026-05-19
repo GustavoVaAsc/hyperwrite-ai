@@ -84,6 +84,52 @@ The backend runs via Docker by default. Use local setup only when:
    uvicorn main:app --reload
    ```
 
+### Database (SQLAlchemy + Alembic)
+
+This project uses **SQLAlchemy 2.0** as the ORM with **Alembic** for database migrations. Both are included in `requirements.txt`.
+
+#### Environment Variables
+
+Make sure your `.env` contains `DATABASE_URL`:
+```env
+DATABASE_URL=postgresql+asyncpg://user:password@localhost:5432/dbname
+```
+
+#### Creating Migrations
+
+1. **Generate a migration** (after modifying models):
+   ```bash
+   cd backend
+   python3 -m alembic revision --autogenerate -m "Description of changes"
+   ```
+
+2. **Apply migrations:**
+   ```bash
+   python3 -m alembic upgrade head
+   ```
+
+3. **Rollback a migration:**
+   ```bash
+   python3 -m alembic downgrade -1
+   ```
+
+#### Model Structure
+
+Models go in `backend/db/models.py`. Import `Base` from `db.base`:
+```python
+from db.base import Base
+
+class MyModel(Base):
+    __tablename__ = "my_table"
+```
+
+#### Running Migrations in Docker
+
+If using Docker, the backend container has Alembic installed. Run:
+```bash
+docker-compose exec backend python3 -m alembic upgrade head
+```
+
 ### 3. Frontend Setup
 
 #### Installing Node.js and pnpm
