@@ -1,8 +1,17 @@
 from __future__ import annotations
 
 import os
+from collections.abc import AsyncGenerator
+from pathlib import Path
 
+from dotenv import load_dotenv
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+
+env_path = Path(__file__).resolve().parents[1] / ".env"
+load_dotenv(env_path)
+
+from .models import User
+from fastapi_users_db_sqlalchemy import SQLAlchemyUserDatabase
 
 DATABASE_URL = os.getenv("DATABASE_URL")
 
@@ -20,3 +29,8 @@ AsyncSessionLocal = async_sessionmaker(
     class_=AsyncSession,
     expire_on_commit=False,
 )
+
+
+async def get_user_db():
+    async with AsyncSessionLocal() as session:
+        yield SQLAlchemyUserDatabase(session, User)
