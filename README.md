@@ -43,12 +43,12 @@ An Agentic AI document editor! (we're trying lol)
 
 5. Start the Docker containers:
    ```bash
-   docker-compose up -d
+   docker compose up -d
    ```
 
 6. Verify the services are running:
    ```bash
-   docker-compose ps
+   docker compose ps
    ```
 
 ### 2. Backend Setup (Optional - Docker recommended)
@@ -127,7 +127,7 @@ class MyModel(Base):
 
 If using Docker, the backend container has Alembic installed. Run:
 ```bash
-docker-compose exec backend python3 -m alembic upgrade head
+docker compose exec backend python3 -m alembic upgrade head
 ```
 
 ### 3. Frontend Setup
