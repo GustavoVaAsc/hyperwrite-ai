@@ -258,11 +258,39 @@ LLM_EMBEDDING_MODEL=text-embedding-3-small
 
 The backend includes a RAG (Retrieval-Augmented Generation) module for document ingestion and context retrieval.
 
+### Storage
+
+Files are stored at `backend/knowledge/files/{user_id}/{file_id}.{ext}`. The raw file is saved for download, while text is extracted, chunked, and embedded for semantic search.
+
 ### Models
 
 - **KnowledgeFolder** — User-created folders (e.g., `/master-thesis`, `/microcomputers`)
-- **KnowledgeFile** — Uploaded documents with metadata
+- **KnowledgeFile** — Uploaded documents with metadata + path to raw file
 - **KnowledgeChunk** — Text chunks + embeddings stored as JSONB vectors
+
+### Configuration
+
+The embedding server has a token batch limit (default 512). If you see "input is too large to process" errors:
+
+1. Reduce chunk size in `backend/knowledge/extractor.py`:
+   ```python
+   CHUNK_SIZE = 350  # words per chunk (lower = safer)
+   CHUNK_OVERLAP = 35
+   ```
+
+2. Increase ubatch-size in `docker-compose.yml` for the `inference-embeddings` service:
+   ```yaml
+   command: >
+     -m /models/nomic-embed-text-v1.5.Q8_0.gguf
+     -c 2048
+     --ubatch-size 2048
+     ...
+   ```
+
+3. Restart the embeddings server:
+   ```bash
+   docker compose up -d inference-embeddings
+   ```
 
 ### Endpoints
 
@@ -282,13 +310,13 @@ curl -X POST http://localhost:8000/knowledge/folder \
   -d '{"name": "master-thesis"}'
 ```
 
-#### Get folder details
+#### Get folder details (includes file list with chunk counts)
 ```bash
 curl http://localhost:8000/knowledge/folder/{folder_id} \
   -H "Authorization: Bearer $TOKEN"
 ```
 
-#### Upload a document (extracts text, chunks, generates embeddings)
+#### Upload a document
 ```bash
 curl -X POST http://localhost:8000/knowledge/folder/{folder_id}/upload \
   -H "Authorization: Bearer $TOKEN" \
@@ -296,7 +324,16 @@ curl -X POST http://localhost:8000/knowledge/folder/{folder_id}/upload \
 ```
 Supported formats: `pdf`, `txt`, `md`
 
-#### Delete folder (cascades to files and chunks)
+The upload extracts text, chunks it, generates embeddings, and saves the raw file.
+
+#### Download a file (raw original)
+```bash
+curl -X GET http://localhost:8000/knowledge/file/{file_id}/download \
+  -H "Authorization: Bearer $TOKEN" \
+  -o original_filename.pdf
+```
+
+#### Delete folder (cascades to files, chunks, and disk storage)
 ```bash
 curl -X DELETE http://localhost:8000/knowledge/folder/{folder_id} \
   -H "Authorization: Bearer $TOKEN"
