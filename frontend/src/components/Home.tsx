@@ -9,7 +9,7 @@ export function Home() {
     fetch(`${apiUrl}/`)
       .then(res => res.json())
       .then(data => setMessage(data.message))
-      .catch(err => setMessage('Error: could not connect to backend'))
+      .catch(() => setMessage('Error: could not connect to backend'))
   }, [])
 
   return (

@@ -12,7 +12,9 @@
   "dependencies": {
     "@tanstack/react-router": "^1.169.2",
     "react": "^19.2.6",
-    "react-dom": "^19.2.6"
+    "react-dom": "^19.2.6",
+    "tiptap": "^1.32.2",
+    "zustand": "^5.0.13"
   },
   "devDependencies": {
     "@babel/core": "^7.29.0",
