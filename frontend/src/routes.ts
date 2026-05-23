@@ -5,6 +5,7 @@ import { Login } from './pages/Login'
 import { Register } from './pages/Register'
 import { Editor } from './pages/Editor'
 import { Files } from './pages/Files'
+import { Knowledge } from './pages/Knowledge'
 import { useAuthStore } from './store/authStore'
 
 export const rootRoute = createRootRoute({
@@ -29,18 +30,6 @@ export const registerRoute = createRoute({
   component: Register,
 })
 
-export const editorRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: '/editor',
-  beforeLoad: () => {
-    const isAuthenticated = useAuthStore.getState().isAuthenticated
-    if (!isAuthenticated) {
-      throw redirect({ to: '/login' })
-    }
-  },
-  component: Editor,
-})
-
 export const filesRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/files',
@@ -53,12 +42,37 @@ export const filesRoute = createRoute({
   component: Files,
 })
 
+export const editorRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/editor/$docId',
+  beforeLoad: () => {
+    const isAuthenticated = useAuthStore.getState().isAuthenticated
+    if (!isAuthenticated) {
+      throw redirect({ to: '/login' })
+    }
+  },
+  component: Editor,
+})
+
+export const knowledgeRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/knowledge',
+  beforeLoad: () => {
+    const isAuthenticated = useAuthStore.getState().isAuthenticated
+    if (!isAuthenticated) {
+      throw redirect({ to: '/login' })
+    }
+  },
+  component: Knowledge,
+})
+
 export const routeTree = rootRoute.addChildren([
   indexRoute,
   loginRoute,
   registerRoute,
-  editorRoute,
   filesRoute,
+  editorRoute,
+  knowledgeRoute,
 ])
 
 export const router = createRouter({ routeTree })

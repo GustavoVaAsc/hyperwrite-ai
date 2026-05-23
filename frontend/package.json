@@ -11,9 +11,14 @@
   },
   "dependencies": {
     "@tanstack/react-router": "^1.169.2",
+    "@tiptap/extension-text-align": "^3.23.6",
+    "@tiptap/extension-text-style": "^3.23.6",
+    "@tiptap/extension-underline": "^3.23.6",
+    "@tiptap/pm": "^3.23.6",
+    "@tiptap/react": "^3.23.6",
+    "@tiptap/starter-kit": "^3.23.6",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
-    "tiptap": "^1.32.2",
     "zustand": "^5.0.13"
   },
   "devDependencies": {

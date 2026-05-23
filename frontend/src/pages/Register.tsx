@@ -69,7 +69,7 @@ export function Register() {
       const userData = await userResponse.json()
       login(userData, data.access_token)
 
-      navigate({ to: '/editor' })
+      navigate({ to: '/files' })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Registration failed')
     } finally {
