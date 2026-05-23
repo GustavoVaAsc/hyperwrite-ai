@@ -42,6 +42,7 @@ export function Editor() {
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState('')
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [, forceUpdate] = useState(0)
 
   const editor = useEditor({
     extensions: [
@@ -55,6 +56,7 @@ export function Editor() {
     editorProps: {
       attributes: {
         class: 'tiptap-editor-content',
+        style: 'padding: 2rem; max-width: 800px; margin: 0 auto; outline: none; min-height: 100%;',
       },
     },
   })
@@ -153,9 +155,13 @@ export function Editor() {
     if (!editor) return
 
     const handler = () => handleContentChangeRef.current()
+    const transactionHandler = () => forceUpdate((n) => n + 1)
+
     editor.on('update', handler)
+    editor.on('transaction', transactionHandler)
     return () => {
       editor.off('update', handler)
+      editor.off('transaction', transactionHandler)
       if (saveTimeoutRef.current) {
         clearTimeout(saveTimeoutRef.current)
       }
@@ -184,7 +190,7 @@ export function Editor() {
   }
 
   return (
-    <div className="editor-fullscreen">
+    <div className="editor-fullscreen" style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 64px)', overflow: 'hidden' }}>
       <header className="editor-header">
         <button onClick={() => navigate({ to: '/files' })} className="btn-back">
           ← Files
@@ -304,7 +310,7 @@ export function Editor() {
           </ToolbarButton>
         </div>
       )}
-      <main className="editor-content-area">
+      <main className="editor-content-area" style={{ flex: 1, overflowY: 'auto' }}>
         <EditorContent editor={editor} />
       </main>
     </div>
