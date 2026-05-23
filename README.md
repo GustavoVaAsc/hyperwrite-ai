@@ -51,7 +51,26 @@ An Agentic AI document editor! (we're trying lol)
    docker compose ps
    ```
 
-### 2. Backend Setup (Optional - Docker recommended)
+### 2. LLM Models Setup
+
+The project uses **two inference servers** (llama.cpp + CUDA) for different purposes:
+
+| Server | Port | Model | Purpose |
+|--------|------|-------|---------|
+| Embeddings | 8080 | `nomic-embed-text-v1.5.Q8_0.gguf` | RAG knowledge base |
+| Chat | 8081 | `gemma-4-E2B-RotorQuant-Q8_0.gguf` | Agent completions |
+
+1. Place your GGUF model files in `backend/llms/models/`
+2. Update `backend/docker-compose.yml` with your model filenames
+3. Restart: `docker compose up -d`
+
+**View logs:**
+```bash
+docker logs -f inference-embeddings
+docker logs -f inference-chat
+```
+
+### 3. Backend Setup (Optional - Docker recommended)
 
 The backend runs via Docker by default. Use local setup only when:
 
