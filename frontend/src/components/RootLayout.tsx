@@ -19,8 +19,8 @@ export function RootLayout() {
         <div className="nav-links">
           {isAuthenticated ? (
             <>
-              <a href="/editor">Editor</a>
               <a href="/files">Files</a>
+              <a href="/knowledge">Knowledge</a>
               <span className="nav-user">{user?.username}</span>
               <button onClick={handleLogout} className="nav-logout">
                 Logout

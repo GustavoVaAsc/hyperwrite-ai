@@ -50,7 +50,7 @@ export function Login() {
       const userData = await userResponse.json()
       login(userData, data.access_token)
 
-      navigate({ to: '/editor' })
+      navigate({ to: '/files' })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed')
     } finally {
