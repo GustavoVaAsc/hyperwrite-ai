@@ -31,6 +31,11 @@ AsyncSessionLocal = async_sessionmaker(
 )
 
 
+async def get_async_session() -> AsyncGenerator[AsyncSession, None]:
+    async with AsyncSessionLocal() as session:
+        yield session
+
+
 async def get_user_db():
     async with AsyncSessionLocal() as session:
         yield SQLAlchemyUserDatabase(session, User)
