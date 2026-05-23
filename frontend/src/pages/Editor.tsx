@@ -6,6 +6,7 @@ import TextAlign from '@tiptap/extension-text-align'
 import Underline from '@tiptap/extension-underline'
 import { getDocument, updateDocument } from '../services/documentService'
 import type { DocumentRead } from '../types/document'
+import { ThemeToggle } from '../components/ThemeToggle'
 
 function ToolbarButton({
   onClick,
@@ -205,6 +206,7 @@ export function Editor() {
         <span className={`save-status ${isSaving ? 'saving' : ''}`}>
           {isSaving ? 'Saving...' : 'Saved'}
         </span>
+        <ThemeToggle />
       </header>
       {editor && (
         <div className="editor-toolbar">

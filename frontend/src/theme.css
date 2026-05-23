@@ -1,0 +1,33 @@
+/* Se activa solo cuando el HTML tiene el atributo data-theme='dark' */
+:root[data-theme='dark'] {
+  color-scheme: dark;
+}
+
+:root[data-theme='dark'] body,
+:root[data-theme='dark'] .editor-fullscreen {
+  background-color: #121212 !important;
+  color: #e5e7eb !important;
+}
+
+:root[data-theme='dark'] .editor-header,
+:root[data-theme='dark'] .editor-toolbar {
+  background-color: #1e1e1e !important;
+  border-bottom-color: #374151 !important;
+}
+
+:root[data-theme='dark'] .doc-title-input {
+  color: #e5e7eb !important;
+}
+
+:root[data-theme='dark'] .toolbar-btn {
+  color: #e5e7eb !important;
+}
+
+:root[data-theme='dark'] .toolbar-btn:hover,
+:root[data-theme='dark'] .toolbar-btn.active {
+  background-color: #374151 !important;
+}
+
+:root[data-theme='dark'] .tiptap-editor-content {
+  color: #e5e7eb !important;
+}
