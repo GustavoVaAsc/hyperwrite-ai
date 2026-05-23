@@ -6,6 +6,8 @@ import os
 
 from auth.router import auth_router, users_router
 from documents.router import router as documents_router
+from agents.router import router as agents_router
+from agents.streaming import router as agents_ws_router
 
 load_dotenv()
 
@@ -31,6 +33,8 @@ app.add_middleware(
 app.include_router(auth_router)
 app.include_router(users_router)
 app.include_router(documents_router)
+app.include_router(agents_router)
+app.include_router(agents_ws_router)
 
 @app.get("/")
 def read_root():
