@@ -1,6 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@700;800&display=swap');
 
-/* ── Tokens ─────────────────────────────────────────── */
 :root {
   --bg-deep:      #0A0118;
   --bg-card:      #1F1235;
@@ -17,19 +16,16 @@
   --font-mono:    'DM Mono', 'Courier New', monospace;
 }
 
-/* ── Layout Global Overrides ────────────────────────── */
-/* Oculta la barra de navegación global y ajusta el root para que el login use toda la pantalla */
-body:has(.login-page) .nav {
+body:has(.register-page) .nav {
   display: none !important;
 }
-body:has(.login-page) #root {
+body:has(.register-page) #root {
   width: 100%;
   max-width: 100%;
   border: none;
 }
 
-/* ── Page ───────────────────────────────────────────── */
-.login-page {
+.register-page {
   min-height: 100vh;
   background: var(--bg-deep);
   display: flex;
@@ -39,8 +35,7 @@ body:has(.login-page) #root {
   overflow: hidden;
 }
 
-/* ── Grid background ────────────────────────────────── */
-.login-grid-bg {
+.register-grid-bg {
   position: fixed;
   inset: 0;
   pointer-events: none;
@@ -51,7 +46,6 @@ body:has(.login-page) #root {
   background-size: 40px 40px;
 }
 
-/* ── Glow orbs ──────────────────────────────────────── */
 .glow {
   position: fixed;
   border-radius: 50%;
@@ -81,8 +75,7 @@ body:has(.login-page) #root {
   background: rgba(232, 121, 249, 0.08);
 }
 
-/* ── Nav ────────────────────────────────────────────── */
-.login-nav {
+.register-nav {
   position: relative;
   z-index: 10;
   display: flex;
@@ -93,7 +86,7 @@ body:has(.login-page) #root {
   backdrop-filter: blur(10px);
 }
 
-.login-logo {
+.register-logo {
   font-size: 18px;
   font-weight: 700;
   letter-spacing: -0.02em;
@@ -103,7 +96,7 @@ body:has(.login-page) #root {
   gap: 8px;
 }
 
-.login-logo-dot {
+.register-logo-dot {
   width: 12px;
   height: 12px;
   border-radius: 50%;
@@ -112,7 +105,7 @@ body:has(.login-page) #root {
   flex-shrink: 0;
 }
 
-.login-nav-links {
+.register-nav-links {
   display: flex;
   gap: 4px;
 }
@@ -142,8 +135,7 @@ body:has(.login-page) #root {
   background: rgba(124, 58, 237, 0.15);
 }
 
-/* ── Main layout ────────────────────────────────────── */
-.login-main {
+.register-main {
   flex: 1;
   display: flex;
   align-items: center;
@@ -153,7 +145,7 @@ body:has(.login-page) #root {
   padding: 40px 20px;
 }
 
-.login-wrapper {
+.register-wrapper {
   width: 100%;
   max-width: 420px;
   margin-top: -6vh;
@@ -165,8 +157,8 @@ body:has(.login-page) #root {
   to   { opacity: 1; transform: translateY(0); }
 }
 
-/* ── Header text ────────────────────────────────────── */
-.login-title {
+
+.register-title {
   font-size: 36px;
   font-weight: 800;
   letter-spacing: -0.03em;
@@ -175,22 +167,21 @@ body:has(.login-page) #root {
   margin-bottom: 6px;
 }
 
-.login-title-accent {
+.register-title-accent {
   background: linear-gradient(135deg, var(--purple), var(--pink));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
-.login-sub {
+.register-sub {
   font-size: 14px;
   font-weight: 500;
   color: var(--text-primary);
   margin-bottom: 36px;
 }
 
-/* ── Card ───────────────────────────────────────────── */
-.login-card {
+.register-card {
   border-radius: 16px;
   padding: 32px;
   position: relative;
@@ -198,7 +189,7 @@ body:has(.login-page) #root {
   overflow: hidden;
 }
 
-.login-card::before {
+.register-card::before {
   content: '';
   position: absolute;
   top: -50%;
@@ -216,7 +207,7 @@ body:has(.login-page) #root {
   z-index: -2;
 }
 
-.login-card::after {
+.register-card::after {
   content: '';
   position: absolute;
   inset: 1px;
@@ -234,20 +225,7 @@ body:has(.login-page) #root {
   display: none;
 }
 
-.card-corner-tag {
-  position: absolute;
-  bottom: 14px;
-  right: 16px;
-  font-family: var(--font-mono);
-  font-size: 10px;
-  color: rgba(124, 58, 237, 0.35);
-  letter-spacing: 0.08em;
-  pointer-events: none;
-  user-select: none;
-}
-
-/* ── Error ──────────────────────────────────────────── */
-.login-page .auth-error {
+.register-page .auth-error {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -267,12 +245,11 @@ body:has(.login-page) #root {
   flex-shrink: 0;
 }
 
-/* ── Form ───────────────────────────────────────────── */
-.login-page .form-group {
+.register-page .form-group {
   margin-bottom: 20px;
 }
 
-.login-page .form-group label {
+.register-page .form-group label {
   display: block;
   font-family: var(--font-mono);
   font-size: 11px;
@@ -299,7 +276,7 @@ body:has(.login-page) #root {
   flex-shrink: 0;
 }
 
-.login-page .input-wrap input {
+.register-page .input-wrap input {
   width: 100%;
   padding: 12px 14px 12px 40px;
   background: var(--input-bg);
@@ -310,33 +287,31 @@ body:has(.login-page) #root {
   font-size: 14px;
   font-family: var(--font-mono);
   transition: border-color 0.2s, box-shadow 0.2s;
-  -webkit-appearance: none;
 }
 
-.login-page .input-wrap input::placeholder {
+.register-page .input-wrap input::placeholder {
   color: rgba(155, 143, 190, 0.5);
 }
 
-.login-page .input-wrap input:hover {
+.register-page .input-wrap input:hover {
   border-color: rgba(124, 58, 237, 0.55);
 }
 
-.login-page .input-wrap input:focus {
+.register-page .input-wrap input:focus {
   border-color: var(--purple);
   box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.18);
 }
 
 /* Chrome autofill override */
-.login-page .input-wrap input:-webkit-autofill,
-.login-page .input-wrap input:-webkit-autofill:hover,
-.login-page .input-wrap input:-webkit-autofill:focus {
+.register-page .input-wrap input:-webkit-autofill,
+.register-page .input-wrap input:-webkit-autofill:hover,
+.register-page .input-wrap input:-webkit-autofill:focus {
   -webkit-box-shadow: 0 0 0 1000px #1F1235 inset !important;
   -webkit-text-fill-color: var(--text-primary) !important;
   caret-color: var(--text-primary);
 }
 
-/* ── Button ─────────────────────────────────────────── */
-.login-page .btn-primary {
+.register-page .btn-primary {
   width: 100%;
   padding: 14px;
   background: var(--purple);
@@ -356,23 +331,22 @@ body:has(.login-page) #root {
   transition: background 0.2s, box-shadow 0.2s, transform 0.15s;
 }
 
-.login-page .btn-primary:hover:not(:disabled) {
+.register-page .btn-primary:hover:not(:disabled) {
   background: var(--purple-hover);
   box-shadow: 0 8px 30px rgba(124, 58, 237, 0.45);
   transform: translateY(-1px);
 }
 
-.login-page .btn-primary:active:not(:disabled) {
+.register-page .btn-primary:active:not(:disabled) {
   transform: scale(0.98);
   box-shadow: none;
 }
 
-.login-page .btn-primary:disabled {
+.register-page .btn-primary:disabled {
   opacity: 0.55;
   cursor: not-allowed;
 }
 
-/* ── Spinner ─────────────────────────────────────────── */
 .spinner {
   width: 16px;
   height: 16px;
@@ -384,8 +358,8 @@ body:has(.login-page) #root {
   to { transform: rotate(360deg); }
 }
 
-/* ── Divider ─────────────────────────────────────────── */
-.login-page .login-divider {
+
+.register-page .register-divider {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -395,14 +369,13 @@ body:has(.login-page) #root {
   font-family: var(--font-mono);
 }
 
-.login-page .login-divider span {
+.register-page .register-divider span {
   flex: 1;
   height: 1px;
   background: var(--border-sub);
 }
 
-/* ── Register link ──────────────────────────────────── */
-.login-page .auth-link {
+.register-page .auth-link {
   margin-top: 20px;
   text-align: center;
   font-size: 13px;
@@ -410,13 +383,13 @@ body:has(.login-page) #root {
   color: var(--text-muted);
 }
 
-.login-page .auth-link a {
+.register-page .auth-link a {
   color: var(--cyan);
   text-decoration: none;
   font-weight: 500;
   transition: color 0.2s;
 }
 
-.login-page .auth-link a:hover {
+.register-page .auth-link a:hover {
   color: var(--pink);
 }

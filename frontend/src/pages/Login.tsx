@@ -105,9 +105,6 @@ export function Login() {
 
       <main className="login-main">
         <div className="login-wrapper">
-          <div className="login-eyebrow">
-            the state of the art document editor
-          </div>
           <h1 className="login-title">
             Welcome <span className="login-title-accent">back.</span>
           </h1>
