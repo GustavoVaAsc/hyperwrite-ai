@@ -608,6 +608,20 @@ useEffect(() => {
         <EditorContent editor={editor} />
       </main>
 
+      {editor && (() => {
+        const text = editor.state.doc.textContent
+        const words = text.trim() ? text.trim().split(/\s+/).length : 0
+        const chars = text.length
+        const readingTime = Math.max(1, Math.ceil(words / 200))
+        return (
+          <footer className="editor-status-bar">
+            <span>{words} {words === 1 ? 'word' : 'words'}</span>
+            <span>{chars} {chars === 1 ? 'character' : 'characters'}</span>
+            <span>~{readingTime} min read</span>
+          </footer>
+        )
+      })()}
+
       {(latexModalOpen || editingMath) && (
         <LaTeXModal
           mode={editingMath?.mode || 'inline'}

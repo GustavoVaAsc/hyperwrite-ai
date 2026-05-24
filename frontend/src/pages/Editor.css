@@ -188,3 +188,18 @@ body:has(.editor-page) #root {
 :root body .editor-page .tiptap-editor-content .ProseMirror li {
   color: #000000 !important;
 }
+
+/* ── Status Bar (Word Count / Reading Time) ────────── */
+.editor-page .editor-status-bar {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 6px 40px;
+  background: rgba(10, 1, 24, 0.6);
+  border-top: 1px solid var(--border-sub);
+  backdrop-filter: blur(10px);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
