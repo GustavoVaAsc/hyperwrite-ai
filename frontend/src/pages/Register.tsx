@@ -66,14 +66,37 @@ export function Register() {
     email: '',
     username: '',
     password: '',
+    confirmPassword: '',
     display_name: '',
   })
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
 
+  const getPasswordStrength = (pass: string) => {
+    let strength = 0
+    if (pass.length >= 8) strength += 1
+    if (/[A-Z]/.test(pass)) strength += 1
+    if (/[a-z]/.test(pass)) strength += 1
+    if (/[0-9]/.test(pass)) strength += 1
+    if (/[^A-Za-z0-9]/.test(pass)) strength += 1
+    return strength
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
+
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match')
+      return
+    }
+
+    const strength = getPasswordStrength(formData.password)
+    if (strength < 3) {
+      setError('Password is too weak. Include at least 8 characters, uppercase, and numbers.')
+      return
+    }
+
     setIsLoading(true)
 
     try {
@@ -133,6 +156,8 @@ export function Register() {
       setIsLoading(false)
     }
   }
+
+  const strength = getPasswordStrength(formData.password)
 
   return (
     <div className="register-page">
@@ -226,6 +251,34 @@ export function Register() {
                     type="password"
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    placeholder="••••••••"
+                    required
+                    autoComplete="new-password"
+                  />
+                </div>
+                {formData.password && (
+                  <div className="password-strength">
+                    <div className="strength-bars">
+                      <div className={`strength-bar ${strength >= 1 ? (strength <= 2 ? 'active weak' : strength <= 4 ? 'active medium' : 'active strong') : ''}`} />
+                      <div className={`strength-bar ${strength >= 3 ? (strength <= 4 ? 'active medium' : 'active strong') : ''}`} />
+                      <div className={`strength-bar ${strength >= 5 ? 'active strong' : ''}`} />
+                    </div>
+                    <span className={`strength-text ${strength <= 2 ? 'weak' : strength <= 4 ? 'medium' : 'strong'}`}>
+                      {strength <= 2 ? 'Weak' : strength <= 4 ? 'Medium' : 'Strong'}
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="confirmPassword">Confirm Password</label>
+                <div className="input-wrap">
+                  <IconLock />
+                  <input
+                    id="confirmPassword"
+                    type="password"
+                    value={formData.confirmPassword}
+                    onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
                     placeholder="••••••••"
                     required
                     autoComplete="new-password"
