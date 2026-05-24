@@ -19,6 +19,9 @@
 body:has(.register-page) .nav {
   display: none !important;
 }
+body:has(.register-page) {
+  overflow: hidden;
+}
 body:has(.register-page) #root {
   width: 100%;
   max-width: 100%;
@@ -26,13 +29,29 @@ body:has(.register-page) #root {
 }
 
 .register-page {
-  min-height: 100vh;
+  height: 100vh;
   background: var(--bg-deep);
   display: flex;
   flex-direction: column;
   font-family: var(--font-display);
   position: relative;
   overflow-x: hidden;
+  overflow-y: auto;
+}
+
+/* ── Custom Scrollbar ───────────────────────────────── */
+.register-page::-webkit-scrollbar {
+  width: 8px;
+}
+.register-page::-webkit-scrollbar-track {
+  background: transparent;
+}
+.register-page::-webkit-scrollbar-thumb {
+  background: rgba(124, 58, 237, 0.3);
+  border-radius: 4px;
+}
+.register-page::-webkit-scrollbar-thumb:hover {
+  background: rgba(124, 58, 237, 0.6);
 }
 
 .register-grid-bg {

@@ -151,12 +151,56 @@ body:has(.editor-page) #root {
 }
 .editor-page .toolbar-divider { background: var(--border-sub) !important; }
 
+/* ── Layout Principal (Editor + Chat) ─────────────── */
+.editor-main-layout {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+  z-index: 1;
+}
+
+.editor-page .editor-chat-panel {
+  position: relative !important;
+  top: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+  width: 300px !important;
+  min-width: 300px !important;
+  height: 100% !important;
+  border-left: 1px solid var(--border-sub) !important;
+  background: rgba(10, 1, 24, 0.4) !important;
+  backdrop-filter: blur(10px);
+}
+
+/* ── Tipografía del Chat ───────────────────────────── */
+.editor-page .chat-text,
+.editor-page .chat-system-text,
+.editor-page .chat-panel-input-textarea {
+  font-family: var(--sans) !important;
+}
+
 /* ── Área de Escritura ("La Hoja de Papel") ─────────── */
 .editor-page .editor-content-area {
   flex: 1;
-  padding: 40px 20px;
+  padding: 40px 20px 40px clamp(20px, calc(50vw - 408px), calc(100vw - 1156px));
   overflow-y: auto;
   display: block;
+}
+
+.editor-page .editor-content-area::-webkit-scrollbar {
+  width: 8px;
+}
+.editor-page .editor-content-area::-webkit-scrollbar-track {
+  background: transparent;
+}
+.editor-page .editor-content-area::-webkit-scrollbar-thumb {
+  background: rgba(124, 58, 237, 0.3);
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+.editor-page .editor-content-area::-webkit-scrollbar-thumb:hover {
+  background: rgba(124, 58, 237, 0.6);
 }
 
 :root body .editor-page .tiptap-editor-content {
@@ -164,11 +208,11 @@ body:has(.editor-page) #root {
   color: #000000 !important;
   width: 816px !important; /* Ancho exacto de hoja Carta/A4 */
   height: 1056px !important; /* Límite vertical estricto de la hoja */
-  max-width: calc(100vw - 40px);
+  max-width: 100%;
   border-radius: 4px;
   box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
   box-sizing: border-box;
-  margin: 40px auto;
+  margin: 40px 0;
   overflow: hidden !important; /* Evita que la hoja crezca físicamente */
 }
 

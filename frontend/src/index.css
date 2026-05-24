@@ -1261,6 +1261,11 @@ code {
   font-family: var(--font-mono);
 }
 
+.doc-name-pill {
+  color: var(--cyan);
+  font-weight: 600;
+}
+
 .loading-state,
 .error-state {
   text-align: center;

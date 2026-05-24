@@ -20,6 +20,7 @@ import { ERROR_MESSAGES } from '../constants/app'
 import type { DocumentRead } from '../types/document'
 import './Editor.css'
 import styles from './Editor.module.css'
+import { EditorChatPanel } from '../components/chat/EditorChatPanel'
 
 function ToolbarButton({
   onClick,
@@ -619,6 +620,12 @@ useEffect(() => {
           />
         </div>
       )}
+      <div className="editor-main-layout">
+        <main className="editor-content-area">
+          <EditorContent editor={editor} />
+        </main>
+        <EditorChatPanel />
+      </div>
       {showFindReplace && editor && (
         <FindReplace editor={editor} onClose={() => setShowFindReplace(false)} />
       )}
