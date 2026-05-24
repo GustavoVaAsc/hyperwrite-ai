@@ -262,19 +262,23 @@ body:has(.files-page) #root {
   gap: 16px;
 }
 
-.file-item {
+.files-page .file-item {
   position: relative;
   border-radius: 16px;
   overflow: hidden;
   transition: transform 0.18s;
   z-index: 1;
+  background: var(--border-sub);
+  border: none;
+  padding: 0;
+  display: block;
 }
 
-.file-item:hover {
+.files-page .file-item:hover {
   transform: translateX(6px);
 }
 
-.file-item::before {
+.files-page .file-item::before {
   content: '';
   position: absolute;
   top: 50%;
@@ -296,12 +300,11 @@ body:has(.files-page) #root {
   transition: opacity 0.3s;
 }
 
-.file-item:hover::before {
+.files-page .file-item:hover::before {
   opacity: 1;
 }
 
-
-.file-item::after {
+.files-page .file-item::after {
   content: '';
   position: absolute;
   inset: 1px;
@@ -315,7 +318,7 @@ body:has(.files-page) #root {
   100% { transform: rotate(360deg); }
 }
 
-.file-link {
+.files-page .file-link {
   text-decoration: none;
   color: inherit;
   display: flex;
@@ -331,7 +334,7 @@ body:has(.files-page) #root {
   box-sizing: border-box;
 }
 
-.file-icon {
+.files-page .file-icon {
   width: 48px;
   height: 48px;
   display: flex;
@@ -345,18 +348,18 @@ body:has(.files-page) #root {
   transition: background 0.2s, border-color 0.2s, color 0.2s;
 }
 
-.file-item:hover .file-icon {
+.files-page .file-item:hover .file-icon {
   background: rgba(124, 58, 237, 0.22);
   border-color: rgba(124, 58, 237, 0.5);
   color: var(--pink);
 }
 
-.file-icon svg {
+.files-page .file-icon svg {
   margin: 0 !important;
   display: block;
 }
 
-.file-info {
+.files-page .file-info {
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -366,7 +369,7 @@ body:has(.files-page) #root {
   margin-top: 2px;
 }
 
-.file-title {
+.files-page .file-title {
   font-size: 16px;
   font-weight: 700;
   color: var(--text-primary);
@@ -377,7 +380,7 @@ body:has(.files-page) #root {
   line-height: 1.1;
 }
 
-.file-date {
+.files-page .file-date {
   font-family: var(--font-mono);
   font-size: 11px;
   color: var(--cyan);
@@ -386,7 +389,7 @@ body:has(.files-page) #root {
   line-height: 1;
 }
 
-.btn-delete {
+.files-page .btn-delete {
   background: none;
   border: 1px solid transparent;
   color: var(--text-muted);
@@ -406,18 +409,18 @@ body:has(.files-page) #root {
   transition: opacity 0.2s, background 0.2s, color 0.2s, border-color 0.2s, transform 0.15s;
 }
 
-.file-item:hover .btn-delete {
+.files-page .file-item:hover .btn-delete {
   opacity: 1;
 }
 
-.btn-delete:hover {
+.files-page .btn-delete:hover {
   background: rgba(232, 121, 249, 0.12);
   color: var(--pink);
   border-color: rgba(232, 121, 249, 0.3);
   transform: translateY(-50%) scale(1.1);
 }
 
-.empty-state {
+.files-page .empty-state {
   text-align: center;
   padding: 72px 24px;
   border-radius: 16px;
@@ -426,12 +429,13 @@ body:has(.files-page) #root {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 10px;
   background: var(--bg-card);
   border: 1px dashed var(--border-sub);
 }
 
-.empty-icon {
+.files-page .empty-icon {
   width: 64px;
   height: 64px;
   border-radius: 16px;
@@ -444,7 +448,7 @@ body:has(.files-page) #root {
   color: var(--purple);
 }
 
-.empty-state h3 {
+.files-page .empty-state h3 {
   font-size: 20px;
   font-weight: 700;
   color: var(--text-primary);
@@ -452,7 +456,7 @@ body:has(.files-page) #root {
   letter-spacing: -0.02em;
 }
 
-.empty-state p {
+.files-page .empty-state p {
   color: var(--text-muted);
   font-size: 14px;
   margin: 0;
@@ -461,10 +465,8 @@ body:has(.files-page) #root {
   line-height: 1.5;
 }
 
-.empty-state .btn-primary { margin-top: 16px; }
-
-.loading-text,
-.error-text {
+.files-page .loading-text,
+.files-page .error-text {
   text-align: center;
   font-family: var(--font-mono);
   font-size: 13px;
@@ -472,4 +474,4 @@ body:has(.files-page) #root {
   margin-top: 48px;
   letter-spacing: 0.03em;
 }
-.error-text { color: var(--pink); }
+.files-page .error-text { color: var(--pink); }

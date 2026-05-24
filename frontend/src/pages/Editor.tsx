@@ -11,9 +11,10 @@ import * as TableHeaderExtensions from '@tiptap/extension-table-header'
 import { BlockMath, InlineMath } from '@tiptap/extension-mathematics'
 import { getDocument, updateDocument } from '../services/documentService'
 import { LaTeXModal } from '../components/modals/LaTeXModal'
+import { useAuthStore } from '../store/authStore'
 import { ERROR_MESSAGES } from '../constants/app'
 import type { DocumentRead } from '../types/document'
-import { ThemeToggle } from '../components/ThemeToggle'
+import './Editor.css'
 import styles from './Editor.module.css'
 
 function ToolbarButton({
@@ -46,6 +47,7 @@ function ToolbarDivider() {
 export function Editor() {
   const { docId } = useParams({ from: '/editor/$docId' })
   const navigate = useNavigate()
+  const { user, logout } = useAuthStore()
   const [document, setDocument] = useState<DocumentRead | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
@@ -221,9 +223,15 @@ useEffect(() => {
     }
   }, [editor])
 
+  const handleLogout = () => {
+    logout()
+    navigate({ to: '/login' })
+  }
+
   if (isLoading) {
     return (
-      <div className="editor-fullscreen">
+      <div className="editor-page">
+        <div className="editor-grid-bg" />
         <div className="editor-loading">Loading document...</div>
       </div>
     )
@@ -231,7 +239,8 @@ useEffect(() => {
 
   if (error || !document) {
     return (
-      <div className="editor-fullscreen">
+      <div className="editor-page">
+        <div className="editor-grid-bg" />
         <div className="editor-error">
           <p>{error || 'Document not found'}</p>
           <button onClick={() => navigate({ to: '/files' })} className="btn-primary">
@@ -243,22 +252,50 @@ useEffect(() => {
   }
 
   return (
-    <div className="editor-fullscreen">
+    <div className="editor-page">
+      <div className="editor-grid-bg" />
+      <div className="glow glow-purple" />
+      <div className="glow glow-cyan" />
+      <div className="glow glow-pink" />
+
       <header className="editor-header">
-        <button onClick={() => navigate({ to: '/files' })} className="btn-back">
-          ← Files
-        </button>
-        <input
-          type="text"
-          className="doc-title-input"
-          value={document.title}
-          onChange={(e) => handleTitleChange(e.target.value)}
-          placeholder="Untitled"
-        />
-        <span className={`save-status ${isSaving ? 'saving' : ''}`}>
-          {isSaving ? 'Saving...' : 'Saved'}
-        </span>
-        <ThemeToggle />
+        <div className="editor-header-left">
+          <a
+            href="/files"
+            className="files-logo"
+            onClick={(e) => {
+              e.preventDefault()
+              navigate({ to: '/files' })
+            }}
+          >
+            <span className="files-logo-dot" />
+            Hyperwrite AI
+          </a>
+          <span className={`save-status ${isSaving ? 'saving' : ''}`}>
+            {isSaving ? 'Saving...' : 'Saved'}
+          </span>
+        </div>
+
+        <div className="editor-header-center">
+          <input
+            type="text"
+            className="doc-title-input"
+            value={document.title}
+            onChange={(e) => handleTitleChange(e.target.value)}
+            placeholder="Untitled"
+          />
+        </div>
+
+        <div className="files-nav-links">
+          <a href="/files" className="nav-link" onClick={(e) => { e.preventDefault(); navigate({ to: '/files' }) }}>
+            Files
+          </a>
+          <a href="/knowledge" className="nav-link" onClick={(e) => { e.preventDefault(); navigate({ to: '/knowledge' }) }}>
+            Knowledge
+          </a>
+          {user && <span className="nav-user">{user.display_name || user.username}</span>}
+          <button onClick={handleLogout} className="nav-logout">Logout</button>
+        </div>
       </header>
       {editor && (
         <div className="editor-toolbar">
