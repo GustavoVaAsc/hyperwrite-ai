@@ -18,6 +18,12 @@
   box-shadow: var(--shadow);
 }
 
+.header {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+
 .title {
   margin: 0 0 0.75rem;
   color: var(--text-h);
@@ -70,4 +76,162 @@
 .actions button.danger:hover {
   background: #b91c1c;
   border-color: #b91c1c;
+}
+
+/* ============================================================
+   Cyber morado theme — scoped to .files-page only.
+   Doesn't affect any other page using ConfirmModal.
+   ============================================================ */
+
+:global(.files-page) .backdrop {
+  background: rgba(10, 1, 24, 0.78);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  animation: cyberFadeIn 0.2s ease;
+}
+
+@keyframes cyberFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+:global(.files-page) .content {
+  background: var(--border-sub);
+  border: none;
+  border-radius: 16px;
+  padding: 28px 28px 24px;
+  width: 440px;
+  max-width: 90vw;
+  font-family: 'Syne', 'Segoe UI', sans-serif;
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.6),
+    0 0 40px rgba(124, 58, 237, 0.18);
+  position: relative;
+  animation: cyberPopIn 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+  z-index: 1;
+  overflow: hidden;
+}
+
+@keyframes cyberPopIn {
+  from { opacity: 0; transform: translateY(8px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0)   scale(1);    }
+}
+
+:global(.files-page) .content::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 2000px;
+  height: 2000px;
+  margin-top: -1000px;
+  margin-left: -1000px;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0%,
+    transparent 75%,
+    #7C3AED 90%,
+    #E879F9 100%
+  );
+  animation: borderRotate 4s linear infinite;
+  z-index: -2;
+}
+
+:global(.files-page) .content::after {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  background: var(--bg-card);
+  border-radius: 15px;
+  z-index: -1;
+}
+
+@keyframes borderRotate {
+  0%   { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+:global(.files-page) .header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+:global(.files-page) .icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: rgba(232, 121, 249, 0.12);
+  border: 1px solid rgba(232, 121, 249, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #E879F9;
+  flex-shrink: 0;
+}
+
+:global(.files-page) .title {
+  margin: 0;
+  color: #F1F0FF;
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+:global(.files-page) .message {
+  margin: 0 0 24px;
+  color: #9B8FBE;
+  font-size: 14px;
+  line-height: 1.6;
+  font-family: 'Syne', 'Segoe UI', sans-serif;
+}
+
+:global(.files-page) .actions {
+  gap: 10px;
+}
+
+:global(.files-page) .actions button {
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: 'Syne', 'Segoe UI', sans-serif;
+  letter-spacing: 0.01em;
+  background: transparent;
+  color: #9B8FBE;
+  border: 1px solid rgba(124, 58, 237, 0.3);
+  transition: all 0.18s ease;
+}
+
+:global(.files-page) .actions button:hover {
+  color: #F1F0FF;
+  background: rgba(124, 58, 237, 0.12);
+  border-color: rgba(124, 58, 237, 0.55);
+}
+
+:global(.files-page) .actions button.primary {
+  background: #7C3AED;
+  border-color: #7C3AED;
+  color: white;
+}
+
+:global(.files-page) .actions button.primary:hover {
+  background: #8B47FF;
+  border-color: #8B47FF;
+  color: white;
+  box-shadow: 0 6px 24px rgba(124, 58, 237, 0.45);
+}
+
+:global(.files-page) .actions button.danger {
+  background: rgba(232, 121, 249, 0.12);
+  border-color: rgba(232, 121, 249, 0.45);
+  color: #E879F9;
+}
+
+:global(.files-page) .actions button.danger:hover {
+  background: #E879F9;
+  border-color: #E879F9;
+  color: #0A0118;
+  box-shadow: 0 6px 24px rgba(232, 121, 249, 0.4);
 }

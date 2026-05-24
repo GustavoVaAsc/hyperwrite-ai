@@ -1,6 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@700;800&display=swap');
 
-/* ── Tokens ─────────────────────────────────────────── */
+
 :root {
   --bg-deep:      #0A0118;
   --bg-card:      #1F1235;
@@ -17,10 +17,11 @@
   --font-mono:    'DM Mono', 'Courier New', monospace;
 }
 
-/* ── Layout Global Overrides ────────────────────────── */
-/* Oculta la barra de navegación global y ajusta el root para que el login use toda la pantalla */
 body:has(.login-page) .nav {
   display: none !important;
+}
+body:has(.login-page) {
+  overflow: hidden;
 }
 body:has(.login-page) #root {
   width: 100%;
@@ -28,18 +29,31 @@ body:has(.login-page) #root {
   border: none;
 }
 
-/* ── Page ───────────────────────────────────────────── */
 .login-page {
-  min-height: 100vh;
+  height: 100vh;
   background: var(--bg-deep);
   display: flex;
   flex-direction: column;
   font-family: var(--font-display);
   position: relative;
   overflow-x: hidden;
+  overflow-y: auto;
 }
 
-/* ── Grid background ────────────────────────────────── */
+.login-page::-webkit-scrollbar {
+  width: 8px;
+}
+.login-page::-webkit-scrollbar-track {
+  background: transparent;
+}
+.login-page::-webkit-scrollbar-thumb {
+  background: rgba(124, 58, 237, 0.3);
+  border-radius: 4px;
+}
+.login-page::-webkit-scrollbar-thumb:hover {
+  background: rgba(124, 58, 237, 0.6);
+}
+
 .login-grid-bg {
   position: fixed;
   inset: 0;
@@ -51,7 +65,6 @@ body:has(.login-page) #root {
   background-size: 40px 40px;
 }
 
-/* ── Glow orbs ──────────────────────────────────────── */
 .glow {
   position: fixed;
   border-radius: 50%;
@@ -81,7 +94,6 @@ body:has(.login-page) #root {
   background: rgba(232, 121, 249, 0.08);
 }
 
-/* ── Nav ────────────────────────────────────────────── */
 .login-nav {
   display: flex;
   align-items: center;
@@ -140,7 +152,6 @@ body:has(.login-page) #root {
   background: rgba(124, 58, 237, 0.15);
 }
 
-/* ── Main layout ────────────────────────────────────── */
 .login-main {
   flex: 1;
   display: flex;
@@ -163,7 +174,7 @@ body:has(.login-page) #root {
   to   { opacity: 1; transform: translateY(0); }
 }
 
-/* ── Header text ────────────────────────────────────── */
+
 .login-title {
   font-size: 36px;
   font-weight: 800;
@@ -187,7 +198,6 @@ body:has(.login-page) #root {
   margin-bottom: 36px;
 }
 
-/* ── Card ───────────────────────────────────────────── */
 .login-card {
   border-radius: 16px;
   padding: 32px;
@@ -247,7 +257,6 @@ body:has(.login-page) #root {
   user-select: none;
 }
 
-/* ── Error ──────────────────────────────────────────── */
 .login-page .auth-error {
   display: flex;
   align-items: center;
@@ -268,7 +277,7 @@ body:has(.login-page) #root {
   flex-shrink: 0;
 }
 
-/* ── Form ───────────────────────────────────────────── */
+
 .login-page .form-group {
   margin-bottom: 20px;
 }
@@ -311,7 +320,6 @@ body:has(.login-page) #root {
   font-size: 14px;
   font-family: var(--font-mono);
   transition: border-color 0.2s, box-shadow 0.2s;
-  -webkit-appearance: none;
 }
 
 .login-page .input-wrap input::placeholder {
@@ -336,7 +344,6 @@ body:has(.login-page) #root {
   caret-color: var(--text-primary);
 }
 
-/* ── Button ─────────────────────────────────────────── */
 .login-page .btn-primary {
   width: 100%;
   padding: 14px;
@@ -373,7 +380,6 @@ body:has(.login-page) #root {
   cursor: not-allowed;
 }
 
-/* ── Spinner ─────────────────────────────────────────── */
 .spinner {
   width: 16px;
   height: 16px;
@@ -385,7 +391,6 @@ body:has(.login-page) #root {
   to { transform: rotate(360deg); }
 }
 
-/* ── Divider ─────────────────────────────────────────── */
 .login-page .login-divider {
   display: flex;
   align-items: center;
@@ -402,7 +407,6 @@ body:has(.login-page) #root {
   background: var(--border-sub);
 }
 
-/* ── Register link ──────────────────────────────────── */
 .login-page .auth-link {
   margin-top: 20px;
   text-align: center;

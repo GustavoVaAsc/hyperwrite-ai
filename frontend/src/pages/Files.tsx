@@ -250,7 +250,16 @@ export function Files() {
       {deleteConfirm.show && deleteConfirm.doc && (
         <ConfirmModal
           title="Delete Document"
-          message={`Are you sure you want to delete "${deleteConfirm.doc.title || UI_COPY.UNTITLED}"? ${UI_COPY.DELETE_CONFIRM_SUFFIX}`}
+          icon={<IconTrash />}
+          message={
+            <>
+              Are you sure you want to delete{' '}
+              <span className="doc-name-pill">
+                {deleteConfirm.doc.title || UI_COPY.UNTITLED}
+              </span>
+              ? {UI_COPY.DELETE_CONFIRM_SUFFIX}
+            </>
+          }
           onConfirm={handleConfirmDelete}
           onCancel={handleCancelDelete}
         />
