@@ -12,4 +12,4 @@ COPY . .
 
 EXPOSE 8000
 
-ENTRYPOINT ["sh", "-c", "alembic upgrade head && uvicorn main:app --host 0.0.0.0 --port 8000"]
+ENTRYPOINT ["sh", "-c", "alembic upgrade head && python scripts/seed_agents.py && uvicorn main:app --host 0.0.0.0 --port 8000"]

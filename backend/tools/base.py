@@ -16,7 +16,10 @@ class BaseTool(ABC):
 
     def to_schema(self) -> dict[str, Any]:
         return {
-            "name": self.name,
-            "description": self.description,
-            "parameters": self.parameters,
+            "type": "function",
+            "function": {
+                "name": self.name,
+                "description": self.description,
+                "parameters": self.parameters,
+            },
         }
