@@ -189,6 +189,19 @@ body:has(.editor-page) #root {
   color: #000000 !important;
 }
 
+/* ── Images Inside Editor ──────────────────────────── */
+:root body .editor-page .tiptap-editor-content .ProseMirror img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 12px 0;
+  border-radius: 4px;
+}
+:root body .editor-page .tiptap-editor-content .ProseMirror img.ProseMirror-selectednode {
+  outline: 2px solid #7C3AED;
+  outline-offset: 2px;
+}
+
 /* ── Find & Replace Bar ────────────────────────────── */
 .editor-page .find-replace-bar {
   display: flex;
