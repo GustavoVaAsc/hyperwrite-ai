@@ -14,7 +14,7 @@ from auth.router import fastapi_users
 from db.database import get_async_session
 from db.models import KnowledgeFolder, KnowledgeFile, KnowledgeChunk, User
 
-from .embedding import get_embeddings
+from .embedding import get_embeddings, EmbeddingError
 from .extractor import extract_text
 from . import storage
 
@@ -223,7 +223,13 @@ async def upload_file(
             detail="No text could be extracted from file",
         )
 
-    embedding_vectors = await get_embeddings(chunks)
+    try:
+        embedding_vectors = await get_embeddings(chunks)
+    except EmbeddingError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=str(exc),
+        ) from exc
 
     knowledge_file = KnowledgeFile(
         folder_id=folder.id,
