@@ -1,5 +1,6 @@
 import { Outlet, useNavigate } from '@tanstack/react-router'
 import { useAuthStore } from '../store/authStore'
+import { AlertNotification } from './modals/AlertNotification'
 
 export function RootLayout() {
   const navigate = useNavigate()
@@ -35,6 +36,7 @@ export function RootLayout() {
         </div>
       </nav>
       <Outlet />
+      <AlertNotification />
     </div>
   )
 }

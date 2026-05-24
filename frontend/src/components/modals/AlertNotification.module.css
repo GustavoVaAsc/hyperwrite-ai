@@ -1,0 +1,65 @@
+.container {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  z-index: 200;
+}
+
+.alert {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-radius: 24px;
+  min-width: 280px;
+  max-width: 400px;
+  box-shadow: var(--shadow);
+}
+
+.alert.success {
+  background: var(--accent);
+  color: white;
+}
+
+.alert.warning {
+  background: #ca8a04;
+  color: white;
+}
+
+.alert.error {
+  background: #dc2626;
+  color: white;
+}
+
+.message {
+  flex: 1;
+  font-size: 0.9rem;
+}
+
+.dismiss {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: inherit;
+  opacity: 0.7;
+  transition: opacity 0.15s;
+  border-radius: 50%;
+}
+
+.dismiss:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.dismiss svg {
+  width: 16px;
+  height: 16px;
+}

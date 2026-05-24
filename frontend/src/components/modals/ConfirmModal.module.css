@@ -1,0 +1,73 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.content {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.5rem;
+  width: 400px;
+  max-width: 90vw;
+  box-shadow: var(--shadow);
+}
+
+.title {
+  margin: 0 0 0.75rem;
+  color: var(--text-h);
+  font-size: 1.1rem;
+}
+
+.message {
+  color: var(--text);
+  margin: 0 0 1.5rem;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+.actions button {
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.actions button:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.actions button.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
+}
+
+.actions button.primary:hover {
+  opacity: 0.9;
+}
+
+.actions button.danger {
+  background: #dc2626;
+  border-color: #dc2626;
+  color: white;
+}
+
+.actions button.danger:hover {
+  background: #b91c1c;
+  border-color: #b91c1c;
+}

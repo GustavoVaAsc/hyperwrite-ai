@@ -22,6 +22,7 @@ interface UseKnowledgeReturn {
   removeFile: (folderId: string, fileId: string) => Promise<void>
   uploadFileToFolder: (folderId: string, file: File) => Promise<void>
   goBack: () => void
+  setFolders: React.Dispatch<React.SetStateAction<KnowledgeFolder[]>>
 }
 
 export function useKnowledge(): UseKnowledgeReturn {
@@ -109,5 +110,6 @@ export function useKnowledge(): UseKnowledgeReturn {
     removeFile,
     uploadFileToFolder,
     goBack,
+    setFolders,
   }
 }
