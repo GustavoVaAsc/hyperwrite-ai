@@ -1075,8 +1075,8 @@ code {
 }
 
 .modal-content {
-  background: #1F1235;
-  border: 1px solid rgba(124, 58, 237, 0.25);
+  background: var(--border-sub);
+  border: none;
   border-radius: 16px;
   padding: 2rem;
   max-width: 90vw;
@@ -1084,6 +1084,42 @@ code {
   overflow: hidden;
   box-shadow: 0 8px 30px rgba(124, 58, 237, 0.15);
   animation: modalFadeUp 0.3s ease both;
+  position: relative;
+  z-index: 1;
+}
+
+.modal-content::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 2000px;
+  height: 2000px;
+  margin-top: -1000px;
+  margin-left: -1000px;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0%,
+    transparent 75%,
+    var(--purple) 90%,
+    var(--pink) 100%
+  );
+  animation: borderRotate 4s linear infinite;
+  z-index: -2;
+}
+
+.modal-content::after {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  background: var(--bg-card);
+  border-radius: 15px;
+  z-index: -1;
+}
+
+@keyframes borderRotate {
+  0%   { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
 .modal-header {
@@ -1379,4 +1415,79 @@ code {
   font-size: 0.85rem;
   color: var(--text-muted);
   padding: 0.25rem 0;
+}
+
+/* ── LaTeX Modal ────────────────────────────────────── */
+.latex-modal {
+  width: 500px;
+}
+
+.latex-tabs {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.latex-tab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: rgba(10, 1, 24, 0.4);
+  border: 1px solid var(--border-sub);
+  border-radius: 10px;
+  color: var(--text-muted);
+  cursor: pointer;
+  flex: 1;
+  transition: all 0.2s;
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.latex-tab:hover {
+  border-color: rgba(124, 58, 237, 0.5);
+  color: var(--text-primary);
+}
+
+.latex-tab.active {
+  background: rgba(124, 58, 237, 0.15);
+  border-color: var(--purple);
+  color: var(--text-primary);
+}
+
+.latex-tab-icon {
+  font-size: 18px;
+  color: var(--purple);
+  font-family: var(--font-mono);
+}
+
+.latex-tab-hint {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  opacity: 0.7;
+}
+
+.latex-input-area textarea {
+  width: 100%;
+  height: 120px;
+  padding: 16px;
+  background: rgba(10, 1, 24, 0.6);
+  border: 1px solid var(--border-sub);
+  border-radius: 12px;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  resize: vertical;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  box-sizing: border-box;
+  margin-bottom: 24px;
+}
+
+.latex-input-area textarea:focus {
+  border-color: var(--purple);
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.18);
 }

@@ -14,63 +14,43 @@
   --font-mono:    'DM Mono', 'Courier New', monospace;
 }
 
-body:has(.knowledge-page) {
-  background-color: var(--bg-deep) !important;
+body:has(.knowledge-page) .nav {
+  display: none !important;
 }
-
+body:has(.knowledge-page) {
+  overflow: hidden;
+}
 body:has(.knowledge-page) #root {
   width: 100%;
   max-width: 100%;
   border: none;
 }
 
-body:has(.knowledge-page) .nav {
-  background: rgba(10, 1, 24, 0.5) !important;
-  border-bottom: 1px solid var(--border-sub) !important;
-  max-width: 100%;
-}
-
-body:has(.knowledge-page) .nav a,
-body:has(.knowledge-page) .nav-brand a {
-  color: var(--text-primary) !important;
-  font-family: var(--font-display);
-}
-
-body:has(.knowledge-page) .nav a:hover {
-  color: var(--pink) !important;
-}
-
-body:has(.knowledge-page) .nav-user {
-  color: var(--cyan) !important;
-  font-family: var(--font-mono);
-}
-
-body:has(.knowledge-page) .nav-logout {
-  background: rgba(232, 121, 249, 0.1) !important;
-  color: var(--pink) !important;
-  border: 1px solid rgba(232, 121, 249, 0.3) !important;
-  padding: 6px 14px !important;
-  border-radius: 6px !important;
-  cursor: pointer !important;
-  font-family: var(--font-mono);
-  transition: background 0.2s !important;
-}
-
-body:has(.knowledge-page) .nav-logout:hover {
-  background: rgba(232, 121, 249, 0.25) !important;
-  color: white !important;
-}
-
 /* ── Layout de Knowledge ────────────────────────────── */
 .knowledge-page {
-  min-height: calc(100vh - 64px);
-  position: relative;
-  overflow-x: hidden;
-  padding: 100px 20px 40px;
+  height: 100vh;
+  background: var(--bg-deep);
   display: flex;
   flex-direction: column;
-  align-items: center;
   font-family: var(--font-display);
+  position: relative;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+/* ── Custom Scrollbar ───────────────────────────────── */
+.knowledge-page::-webkit-scrollbar {
+  width: 8px;
+}
+.knowledge-page::-webkit-scrollbar-track {
+  background: transparent;
+}
+.knowledge-page::-webkit-scrollbar-thumb {
+  background: rgba(124, 58, 237, 0.3);
+  border-radius: 4px;
+}
+.knowledge-page::-webkit-scrollbar-thumb:hover {
+  background: rgba(124, 58, 237, 0.6);
 }
 
 .knowledge-grid-bg {
@@ -96,17 +76,65 @@ body:has(.knowledge-page) .nav-logout:hover {
 .glow-cyan { width: 300px; height: 300px; bottom: -60px; left: -60px; background: rgba(6, 182, 212, 0.14); }
 .glow-pink { width: 200px; height: 200px; top: 40%; left: 30%; background: rgba(232, 121, 249, 0.08); }
 
+/* ── NavBar Integrado ───────────────────────────────── */
+.knowledge-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 40px;
+  border-bottom: 1px solid var(--border-sub);
+  background: rgba(10, 1, 24, 0.5);
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 50;
+  backdrop-filter: blur(10px);
+  box-sizing: border-box;
+}
+
+.knowledge-logo {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  font-family: var(--font-display);
+}
+
+.knowledge-logo-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--purple);
+  box-shadow: 0 0 10px var(--purple);
+  flex-shrink: 0;
+}
+
+.knowledge-nav-links {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
 /* ── Contenido Principal ────────────────────────────── */
-.knowledge-content {
+.knowledge-main {
+  flex: 1;
+  display: flex;
+  justify-content: center;
   position: relative;
   z-index: 1;
+  padding: 100px 40px 80px;
+}
+
+.knowledge-content {
   width: 100%;
-  max-width: 600px;
+  max-width: 1000px;
   animation: fadeUp 0.45s ease both;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-top: 4vh;
+  display: block;
 }
 
 @keyframes fadeUp {
@@ -114,84 +142,262 @@ body:has(.knowledge-page) .nav-logout:hover {
   to   { opacity: 1; transform: translateY(0); }
 }
 
-.knowledge-title {
+.knowledge-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.knowledge-title-wrapper {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+}
+
+.knowledge-header h1 {
   font-size: 36px;
   font-weight: 800;
   letter-spacing: -0.03em;
   color: var(--text-primary);
-  margin: 0 0 10px;
-  text-align: center;
+  margin: 0;
+  line-height: 1.1;
 }
 
-.knowledge-description {
-  font-size: 15px;
-  color: var(--text-muted);
-  margin-bottom: 40px;
-  text-align: center;
+.knowledge-title-accent {
+  background: linear-gradient(135deg, var(--purple), var(--pink));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
-/* ── Tarjeta "Coming Soon" ──────────────────────────── */
-.knowledge-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border-sub);
+/* ── Botones ────────────────────────────────────────── */
+.knowledge-page .btn-primary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 22px;
+  background: var(--purple);
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: var(--font-display);
+  color: white;
+  letter-spacing: 0.01em;
+  transition: background 0.2s, box-shadow 0.2s, transform 0.15s;
+  white-space: nowrap;
+}
+.knowledge-page .btn-primary:hover {
+  background: var(--purple-hover);
+  box-shadow: 0 8px 30px rgba(124, 58, 237, 0.45);
+  transform: translateY(-1px);
+}
+.knowledge-page .btn-primary:active { transform: scale(0.98); box-shadow: none; }
+
+.knowledge-page .btn-back {
+  background: rgba(124, 58, 237, 0.1);
+  border: 1px solid rgba(124, 58, 237, 0.25);
+  color: var(--text-primary);
+  padding: 10px 18px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: var(--font-display);
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.knowledge-page .btn-back:hover {
+  background: rgba(124, 58, 237, 0.2);
+  border-color: rgba(124, 58, 237, 0.5);
+  color: var(--pink);
+}
+
+/* ── Grid de Tarjetas (Archivos y Carpetas) ─────────── */
+.knowledge-page .folder-grid,
+.knowledge-page .file-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.knowledge-page .folder-item,
+.knowledge-page .file-item {
+  position: relative;
   border-radius: 16px;
-  padding: 40px;
-  text-align: center;
-  box-shadow: 0 8px 30px rgba(124, 58, 237, 0.15);
+  overflow: hidden;
+  transition: transform 0.18s;
+  z-index: 1;
+  background: var(--border-sub);
+  border: none;
+  padding: 20px;
+  padding-right: 56px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  box-sizing: border-box;
   width: 100%;
 }
 
-.placeholder-icon {
-  font-size: 48px;
-  margin-bottom: 20px;
-  display: inline-block;
-  padding: 20px;
-  background: rgba(124, 58, 237, 0.1);
-  border-radius: 50%;
+.knowledge-page .folder-item:hover,
+.knowledge-page .file-item:hover {
+  transform: translateX(6px);
+}
+
+.knowledge-page .folder-item::before,
+.knowledge-page .file-item::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 2000px;
+  height: 2000px;
+  margin-top: -1000px;
+  margin-left: -1000px;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0%,
+    transparent 75%,
+    var(--purple) 90%,
+    var(--pink) 100%
+  );
+  animation: borderRotate 4s linear infinite;
+  z-index: -2;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.knowledge-page .folder-item:hover::before,
+.knowledge-page .file-item:hover::before {
+  opacity: 1;
+}
+
+.knowledge-page .folder-item::after,
+.knowledge-page .file-item::after {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  background: var(--bg-card);
+  border-radius: 15px;
+  z-index: -1;
+}
+
+/* Inner elements override */
+.knowledge-page .folder-icon,
+.knowledge-page .file-icon {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 12px;
+  background: rgba(124, 58, 237, 0.12);
   border: 1px solid var(--border-sub);
-  box-shadow: 0 0 20px rgba(124, 58, 237, 0.2);
+  flex-shrink: 0;
+  color: var(--purple);
+  transition: background 0.2s, border-color 0.2s, color 0.2s;
+  z-index: 1;
 }
 
-.knowledge-card h2 {
-  color: var(--text-primary);
-  font-size: 24px;
-  margin-bottom: 16px;
+.knowledge-page .folder-icon svg,
+.knowledge-page .file-icon svg {
+  width: 24px;
+  height: 24px;
+  margin: 0 !important;
+  display: block;
 }
 
-.knowledge-card p {
-  color: var(--text-muted);
-  line-height: 1.6;
-  margin-bottom: 32px;
+.knowledge-page .folder-item:hover .folder-icon,
+.knowledge-page .file-item:hover .file-icon {
+  background: rgba(124, 58, 237, 0.22);
+  border-color: rgba(124, 58, 237, 0.5);
+  color: var(--pink);
 }
 
-.feature-list {
-  list-style: none;
-  padding: 0;
-  margin: 0 auto;
+.knowledge-page .folder-info,
+.knowledge-page .file-info {
+  flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  text-align: left;
-  width: fit-content;
+  gap: 5px;
+  min-width: 0;
+  justify-content: center;
+  margin-top: 2px;
+  z-index: 1;
 }
 
-.feature-list li {
+.knowledge-page .folder-name,
+.knowledge-page .file-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.1;
+}
+
+.knowledge-page .folder-meta,
+.knowledge-page .file-meta {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--cyan);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  line-height: 1;
+}
+
+.knowledge-page .folder-actions,
+.knowledge-page .file-actions {
+  display: flex;
+  gap: 8px;
+  opacity: 0;
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  transition: opacity 0.2s;
+}
+
+.knowledge-page .folder-item:hover .folder-actions,
+.knowledge-page .file-item:hover .file-actions {
+  opacity: 1;
+}
+
+.knowledge-page .action-btn {
+  background: none;
+  border: 1px solid transparent;
+  color: var(--text-muted);
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
-  gap: 12px;
-  color: var(--text-primary);
-  font-family: var(--font-mono);
-  font-size: 14px;
-  background: rgba(10, 1, 24, 0.4);
-  padding: 12px 20px;
-  border-radius: 8px;
-  border: 1px solid rgba(124, 58, 237, 0.15);
-  transition: transform 0.2s, border-color 0.2s;
+  justify-content: center;
+  cursor: pointer;
+  transition: opacity 0.2s, background 0.2s, color 0.2s, border-color 0.2s, transform 0.15s;
 }
 
-.feature-list li:hover {
-  transform: translateX(4px);
-  border-color: var(--purple);
+.knowledge-page .action-btn:hover {
+  background: rgba(124, 58, 237, 0.12);
+  color: var(--text-primary);
+  border-color: rgba(124, 58, 237, 0.3);
+  transform: scale(1.1);
+}
+
+.knowledge-page .action-btn.delete-btn:hover {
+  background: rgba(232, 121, 249, 0.12);
+  color: var(--pink);
+  border-color: rgba(232, 121, 249, 0.3);
 }
 
 /* ── Estados Vacíos y de Carga ──────────────────────── */

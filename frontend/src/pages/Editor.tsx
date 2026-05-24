@@ -64,6 +64,7 @@ export function Editor() {
   const titleTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const imageInputRef = useRef<HTMLInputElement | null>(null)
   const [, forceUpdate] = useState(0)
+  const [outline, setOutline] = useState<{ text: string; level: number; pos: number; id: string }[]>([])
 
   const editor = useEditor({
     extensions: [
@@ -248,8 +249,30 @@ useEffect(() => {
   useEffect(() => {
     if (!editor) return
 
-    const handler = () => handleContentChangeRef.current()
-    const transactionHandler = () => forceUpdate((n) => n + 1)
+    const updateOutline = () => {
+      const items: { text: string; level: number; pos: number; id: string }[] = []
+      editor.state.doc.descendants((node, pos) => {
+        if (node.type.name === 'heading') {
+          items.push({
+            text: node.textContent,
+            level: node.attrs.level,
+            pos,
+            id: `heading-${pos}`,
+          })
+        }
+      })
+      setOutline(items)
+    }
+
+    updateOutline()
+
+    const handler = () => {
+      handleContentChangeRef.current()
+    }
+    const transactionHandler = () => {
+      forceUpdate((n) => n + 1)
+      updateOutline()
+    }
 
     editor.on('update', handler)
     editor.on('transaction', transactionHandler)
@@ -312,6 +335,11 @@ useEffect(() => {
     window.addEventListener('keydown', handleCtrlF)
     return () => window.removeEventListener('keydown', handleCtrlF)
   }, [])
+
+  const scrollToHeading = (pos: number) => {
+    if (!editor) return
+    editor.chain().focus().setTextSelection(pos).scrollIntoView().run()
+  }
 
   const handleLogout = () => {
     logout()
@@ -641,6 +669,26 @@ useEffect(() => {
         <FindReplace editor={editor} onClose={() => setShowFindReplace(false)} />
       )}
       <div className="editor-main-layout">
+        <aside className="editor-sidebar-left">
+          <h2 className="outline-header">Outline</h2>
+          <div className="outline-list">
+            {outline.length === 0 ? (
+              <p className="outline-empty">No headings yet.</p>
+            ) : (
+              outline.map((item) => (
+                <button
+                  key={item.id}
+                  className="outline-item"
+                  style={{ paddingLeft: `${(item.level - 1) * 16 + 12}px` }}
+                  onClick={() => scrollToHeading(item.pos)}
+                >
+                  <span className="outline-level">H{item.level}</span>
+                  <span className="outline-text">{item.text || 'Empty heading'}</span>
+                </button>
+              ))
+            )}
+          </div>
+        </aside>
         <main className="editor-content-area">
           <EditorContent editor={editor} />
         </main>

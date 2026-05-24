@@ -1,5 +1,4 @@
 import { type JSX, useState, useEffect } from 'react'
-import styles from './LaTeXModal.module.css'
 
 type MathMode = 'inline' | 'block'
 
@@ -40,39 +39,39 @@ export function LaTeXModal({
   }
 
   return (
-    <div className={styles.backdrop} onClick={onClose}>
-      <div className={styles.content} onClick={e => e.stopPropagation()}>
-        <div className={styles.header}>
+    <div className="modal-backdrop" onClick={onClose}>
+      <div className="modal-content latex-modal" onClick={e => e.stopPropagation()}>
+        <div className="modal-header">
           <h3>{initialValue ? 'Edit Formula' : 'Insert Formula'}</h3>
-          <button className={styles.closeBtn} onClick={onClose}>
-            <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
-              <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+          <button className="close-btn" onClick={onClose} title="Close" aria-label="Close">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} width="20" height="20">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
 
         {!initialValue && (
-          <div className={styles.tabs}>
+          <div className="latex-tabs">
             <button
-              className={`${styles.tab} ${activeTab === 'inline' ? styles.active : ''}`}
+              className={`latex-tab ${activeTab === 'inline' ? 'active' : ''}`}
               onClick={() => setActiveTab('inline')}
             >
-              <span className={styles.tabIcon}>∫</span>
+              <span className="latex-tab-icon">∫</span>
               <span>Inline</span>
-              <span className={styles.tabHint}>$ formula $</span>
+              <span className="latex-tab-hint">$ formula $</span>
             </button>
             <button
-              className={`${styles.tab} ${activeTab === 'block' ? styles.active : ''}`}
+              className={`latex-tab ${activeTab === 'block' ? 'active' : ''}`}
               onClick={() => setActiveTab('block')}
             >
-              <span className={styles.tabIcon}>Σ</span>
+              <span className="latex-tab-icon">Σ</span>
               <span>Block</span>
-              <span className={styles.tabHint}>$$ formula $$</span>
+              <span className="latex-tab-hint">$$ formula $$</span>
             </button>
           </div>
         )}
 
-        <div className={styles.inputArea}>
+        <div className="latex-input-area">
           <textarea
             value={latex}
             onChange={e => setLatex(e.target.value)}
@@ -82,11 +81,11 @@ export function LaTeXModal({
           />
         </div>
 
-        <div className={styles.actions}>
-          <button className={styles.cancelBtn} onClick={onClose}>
+        <div className="modal-actions">
+          <button onClick={onClose}>
             Cancel
           </button>
-          <button className={styles.insertBtn} onClick={handleInsert} disabled={!latex.trim()}>
+          <button className="primary" onClick={handleInsert} disabled={!latex.trim()}>
             {initialValue ? 'Update' : 'Insert'}
           </button>
         </div>

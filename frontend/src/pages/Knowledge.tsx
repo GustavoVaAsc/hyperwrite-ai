@@ -1,4 +1,6 @@
 import { type JSX, useState, useEffect, useCallback } from 'react'
+import { useNavigate } from '@tanstack/react-router'
+import { useAuthStore } from '../store/authStore'
 import { useKnowledge } from '../hooks/useKnowledge'
 import { FolderItem } from '../components/knowledge/FolderItem'
 import { FileItem } from '../components/knowledge/FileItem'
@@ -12,6 +14,8 @@ import type { KnowledgeFolder, KnowledgeFile } from '../types/knowledge'
 import { deleteFolder } from '../services/knowledgeService'
 
 export function Knowledge(): JSX.Element {
+  const navigate = useNavigate()
+  const { user, logout } = useAuthStore()
   const {
     folders,
     currentFolder,
@@ -108,50 +112,73 @@ export function Knowledge(): JSX.Element {
     }
   }, [])
 
-  return (
-    <div className="page-container knowledge-page">
-      <div className="knowledge-header">
-        <div className="header-left">
-          {currentFolder ? (
-            <button className="back-btn" onClick={goBack}>
-              <svg viewBox="0 0 24 24" fill="currentColor">
-                <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z" />
-              </svg>
-              <span>{UI_COPY.BACK_TO_FOLDERS}</span>
-            </button>
-          ) : (
-            <h1>Knowledge Base</h1>
-          )}
-        </div>
-        <div className="header-right">
-          {currentFolder && (
-            <button
-              className="new-folder-btn"
-              onClick={() => handleUploadClick(currentFolder)}
-            >
-              <svg viewBox="0 0 24 24" fill="currentColor">
-                <path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z" />
-              </svg>
-              <span>Upload</span>
-            </button>
-          )}
-          {!currentFolder && (
-            <button
-              className="new-folder-btn"
-              onClick={() => setShowNewFolderModal(true)}
-            >
-              <svg viewBox="0 0 24 24" fill="currentColor">
-                <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
-              </svg>
-              <span>New Folder</span>
-            </button>
-          )}
-        </div>
-      </div>
+  const handleLogout = () => {
+    logout()
+    navigate({ to: '/login' })
+  }
 
-      <div className="knowledge-content">
-        {loading && <div className="loading-state">Loading...</div>}
-        {error && <div className="error-state">{error}</div>}
+  return (
+    <div className="knowledge-page">
+      <div className="knowledge-grid-bg" />
+      <div className="glow glow-purple" />
+      <div className="glow glow-cyan" />
+      <div className="glow glow-pink" />
+
+      <nav className="knowledge-nav">
+        <a href="/files" className="knowledge-logo" onClick={(e) => { e.preventDefault(); navigate({ to: '/files' }) }}>
+          <span className="knowledge-logo-dot" />
+          Hyperwrite AI
+        </a>
+        <div className="knowledge-nav-links">
+          <a href="/files" className="nav-link" onClick={(e) => { e.preventDefault(); navigate({ to: '/files' }) }}>Files</a>
+          <a href="/knowledge" className="nav-link nav-link--active" onClick={(e) => { e.preventDefault(); navigate({ to: '/knowledge' }) }}>Knowledge</a>
+          {user && (
+            <span className="nav-user">{user.display_name || user.username}</span>
+          )}
+          <button onClick={handleLogout} className="nav-logout">
+            Logout
+          </button>
+        </div>
+      </nav>
+
+      <main className="knowledge-main">
+        <div className="knowledge-content">
+          <div className="knowledge-header">
+            <div className="knowledge-title-wrapper">
+              {currentFolder ? (
+                <button className="btn-back" onClick={goBack}>
+                  <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
+                    <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z" />
+                  </svg>
+                  {currentFolder.name}
+                </button>
+              ) : (
+                <h1>
+                  Knowledge <span className="knowledge-title-accent">Base</span>
+                </h1>
+              )}
+            </div>
+            <div className="header-right">
+              {currentFolder ? (
+                <button className="btn-primary" onClick={() => handleUploadClick(currentFolder)}>
+                  <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
+                    <path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z" />
+                  </svg>
+                  Upload Files
+                </button>
+              ) : (
+                <button className="btn-primary" onClick={() => setShowNewFolderModal(true)}>
+                  <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
+                    <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
+                  </svg>
+                  New Folder
+                </button>
+              )}
+            </div>
+          </div>
+
+          {loading && <div className="loading-state">Loading...</div>}
+          {error && <div className="error-state">{error}</div>}
 
         {!loading && !error && !currentFolder && folders.length === 0 && (
           <div className="empty-state">
@@ -196,7 +223,8 @@ export function Knowledge(): JSX.Element {
             )}
           </div>
         )}
-      </div>
+        </div>
+      </main>
 
       {uploadLoading && (
         <div className="upload-indicator">{UI_COPY.UPLOADING}</div>

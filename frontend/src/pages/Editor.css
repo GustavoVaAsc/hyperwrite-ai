@@ -173,6 +173,97 @@ body:has(.editor-page) #root {
   backdrop-filter: blur(10px);
 }
 
+/* ── Outline Sidebar ────────────────────────────── */
+.editor-sidebar-left {
+  width: 280px;
+  min-width: 280px;
+  background: rgba(10, 1, 24, 0.4);
+  backdrop-filter: blur(10px);
+  border-right: 1px solid var(--border-sub);
+  padding: 24px 16px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.editor-sidebar-left::-webkit-scrollbar {
+  width: 6px;
+}
+.editor-sidebar-left::-webkit-scrollbar-track {
+  background: transparent;
+}
+.editor-sidebar-left::-webkit-scrollbar-thumb {
+  background: rgba(124, 58, 237, 0.3);
+  border-radius: 3px;
+}
+
+.outline-header {
+  font-family: var(--font-display);
+  color: var(--text-primary);
+  font-size: 18px;
+  margin: 0 0 20px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.outline-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.outline-empty {
+  color: var(--text-muted);
+  font-size: 13px;
+  font-family: var(--font-mono);
+}
+
+.outline-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-left: 3px solid transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: left;
+  font-family: var(--sans);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.outline-item:hover {
+  color: var(--text-primary);
+  background: rgba(124, 58, 237, 0.1);
+  border-left-color: rgba(124, 58, 237, 0.5);
+}
+
+.outline-item.active {
+  background: rgba(124, 58, 237, 0.15);
+  border-left-color: var(--purple);
+  color: var(--text-primary);
+}
+
+.outline-level {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--cyan);
+  flex-shrink: 0;
+}
+
+.outline-text {
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.4;
+}
+
 /* ── Tipografía del Chat ───────────────────────────── */
 .editor-page .chat-text,
 .editor-page .chat-system-text,
@@ -183,7 +274,7 @@ body:has(.editor-page) #root {
 /* ── Área de Escritura ("La Hoja de Papel") ─────────── */
 .editor-page .editor-content-area {
   flex: 1;
-  padding: 40px 20px 40px clamp(20px, calc(50vw - 408px), calc(100vw - 1156px));
+  padding: 40px 20px;
   overflow-y: auto;
   display: block;
 }
@@ -212,7 +303,7 @@ body:has(.editor-page) #root {
   border-radius: 4px;
   box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
   box-sizing: border-box;
-  margin: 40px 0;
+  margin: 40px auto;
   overflow: hidden !important; /* Evita que la hoja crezca físicamente */
 }
 
