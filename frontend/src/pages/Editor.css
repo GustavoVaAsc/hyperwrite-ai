@@ -1,0 +1,190 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@700;800&display=swap');
+
+/* ── Tokens ─────────────────────────────────────────── */
+:root {
+  --bg-deep:      #0A0118;
+  --purple:       #7C3AED;
+  --cyan:         #06B6D4;
+  --pink:         #E879F9;
+  --text-primary: #F1F0FF;
+  --text-muted:   #9B8FBE;
+  --border-sub:   rgba(124, 58, 237, 0.25);
+  --font-display: 'Syne', 'Segoe UI', sans-serif;
+  --font-mono:    'DM Mono', 'Courier New', monospace;
+}
+
+/* ── Layout Global Overrides ────────────────────────── */
+body:has(.editor-page) .nav {
+  display: none !important;
+}
+body:has(.editor-page) #root {
+  width: 100%;
+  max-width: 100%;
+  border: none;
+}
+
+/* ── Entorno Global (Ignora el modo claro/oscuro del root) ── */
+:root body .editor-page {
+  background-color: var(--bg-deep) !important;
+}
+
+.editor-page {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+/* ── Fondo de Cuadrícula y Orbes Espaciales ─────────── */
+.editor-grid-bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+  background-image:
+    linear-gradient(rgba(124, 58, 237, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(124, 58, 237, 0.06) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+.glow {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: -1;
+  filter: blur(80px);
+}
+.glow-purple { width: 400px; height: 400px; top: -100px; right: -80px; background: rgba(124, 58, 237, 0.18); }
+.glow-cyan   { width: 300px; height: 300px; bottom: -60px; left: -60px; background: rgba(6, 182, 212, 0.14); }
+.glow-pink   { width: 200px; height: 200px; top: 40%; left: 30%; background: rgba(232, 121, 249, 0.08); }
+
+/* ── Barra Superior (Header tipo Nav) y Herramientas ── */
+.editor-page .editor-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 40px !important;
+  background: rgba(10, 1, 24, 0.5) !important;
+  border-bottom: 1px solid var(--border-sub) !important;
+  backdrop-filter: blur(10px);
+  position: relative;
+  z-index: 10;
+}
+
+.editor-header-left {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.editor-header-center {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+}
+
+.editor-page .files-nav-links {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+}
+
+.editor-page .editor-toolbar {
+  background: rgba(10, 1, 24, 0.5) !important;
+  border-bottom: 1px solid var(--border-sub) !important;
+  backdrop-filter: blur(10px);
+  position: relative;
+  z-index: 10;
+  padding: 10px 40px !important;
+  justify-content: center !important;
+}
+
+.editor-page .files-logo {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  font-family: var(--font-display);
+}
+
+.editor-page .files-logo-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--purple);
+  box-shadow: 0 0 10px var(--purple);
+  flex-shrink: 0;
+}
+
+.editor-page .doc-title-input {
+  color: var(--text-primary) !important;
+  font-family: var(--font-display);
+  text-align: center;
+}
+
+.editor-page .save-status {
+  color: var(--text-muted) !important;
+  font-family: var(--font-mono);
+}
+.editor-page .save-status.saving { color: var(--purple) !important; }
+
+.editor-page .toolbar-btn { color: var(--text-muted) !important; }
+.editor-page .toolbar-btn:hover {
+  background: rgba(124, 58, 237, 0.15) !important;
+  color: var(--text-primary) !important;
+}
+.editor-page .toolbar-btn.active {
+  background: rgba(124, 58, 237, 0.25) !important;
+  color: var(--purple) !important;
+  border-color: var(--purple) !important;
+}
+.editor-page .toolbar-divider { background: var(--border-sub) !important; }
+
+/* ── Área de Escritura ("La Hoja de Papel") ─────────── */
+.editor-page .editor-content-area {
+  flex: 1;
+  padding: 40px 20px;
+  overflow-y: auto;
+  display: block;
+}
+
+:root body .editor-page .tiptap-editor-content {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  width: 816px !important; /* Ancho exacto de hoja Carta/A4 */
+  height: 1056px !important; /* Límite vertical estricto de la hoja */
+  max-width: calc(100vw - 40px);
+  border-radius: 4px;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+  box-sizing: border-box;
+  margin: 40px auto;
+  overflow: hidden !important; /* Evita que la hoja crezca físicamente */
+}
+
+:root body .editor-page .tiptap-editor-content .ProseMirror {
+  padding: 96px !important; /* Límite inquebrantable de 1 pulgada a los 4 costados */
+  box-sizing: border-box;
+  height: 100%;
+  overflow: hidden !important; /* Oculta cualquier texto que intente rebasar el margen inferior */
+}
+
+/* Forzar que todos los elementos textuales sean negros en el papel */
+:root body .editor-page .tiptap-editor-content .ProseMirror,
+:root body .editor-page .tiptap-editor-content .ProseMirror h1,
+:root body .editor-page .tiptap-editor-content .ProseMirror h2,
+:root body .editor-page .tiptap-editor-content .ProseMirror h3,
+:root body .editor-page .tiptap-editor-content .ProseMirror p,
+:root body .editor-page .tiptap-editor-content .ProseMirror li {
+  color: #000000 !important;
+}

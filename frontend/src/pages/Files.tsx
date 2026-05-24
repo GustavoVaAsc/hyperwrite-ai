@@ -199,10 +199,6 @@ export function Files() {
               </div>
               <h3>No documents yet</h3>
               <p>Create your first document to get started</p>
-              <button onClick={handleCreateDocument} className="btn-primary">
-                <IconPlus />
-                New Document
-              </button>
             </div>
           )}
 

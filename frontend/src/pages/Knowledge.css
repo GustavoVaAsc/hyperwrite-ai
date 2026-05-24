@@ -193,3 +193,66 @@ body:has(.knowledge-page) .nav-logout:hover {
   transform: translateX(4px);
   border-color: var(--purple);
 }
+
+/* ── Estados Vacíos y de Carga ──────────────────────── */
+.knowledge-page .empty-state {
+  text-align: center;
+  padding: 72px 24px;
+  border-radius: 16px;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  background: var(--bg-card);
+  border: 1px dashed var(--border-sub);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.knowledge-page .empty-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  background: rgba(124, 58, 237, 0.1);
+  border: 1px solid var(--border-sub);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8px;
+  color: var(--purple);
+}
+
+.knowledge-page .empty-icon svg {
+  width: 28px;
+  height: 28px;
+}
+
+.knowledge-page .empty-state h3 {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.knowledge-page .empty-state p {
+  color: var(--text-muted);
+  font-size: 14px;
+  margin: 0;
+  word-break: break-word;
+  max-width: 400px;
+  line-height: 1.5;
+}
+
+.knowledge-page .loading-state,
+.knowledge-page .error-state {
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-top: 48px;
+  letter-spacing: 0.03em;
+}
+.knowledge-page .error-state { color: var(--pink); }
