@@ -59,6 +59,7 @@ llms/
 # ARCHIVOS SUBIDOS POR USUARIOS
 # ==========================================
 backend/knowledge/files/
+backend/documents/images/
 
 # ==========================================
 # OPENCODE

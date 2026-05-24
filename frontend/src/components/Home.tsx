@@ -18,6 +18,7 @@ export function Home() {
       })
       .then(data => setMessage(data.message))
       .catch(() => {
+        setMessage(ERROR_MESSAGES.BACKEND_CONNECTION)
         addAlert('error', ERROR_MESSAGES.BACKEND_CONNECTION)
       })
   }, [addAlert])

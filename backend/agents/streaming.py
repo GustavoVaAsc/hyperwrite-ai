@@ -31,13 +31,13 @@ from __future__ import annotations
 import uuid
 from typing import Any
 
-from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect, status
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect, status
 from fastapi_users_db_sqlalchemy import SQLAlchemyUserDatabase
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from auth.router import UserManager, get_jwt_strategy
-from db.database import get_async_session
+from db.database import AsyncSessionLocal
 from db.models import Document, User
 
 from . import llm
@@ -103,20 +103,20 @@ async def ws_editor(
     websocket: WebSocket,
     doc_id: uuid.UUID,
     token: str | None = None,
-    session: AsyncSession = Depends(get_async_session),
 ) -> None:
     if not token:
         await websocket.close(code=status.WS_1008_POLICY_VIOLATION, reason="Missing token")
         return
 
-    user = await _authenticate(token, session)
-    if user is None or not user.is_active:
-        await websocket.close(code=status.WS_1008_POLICY_VIOLATION, reason="Invalid token")
-        return
+    async with AsyncSessionLocal() as session:
+        user = await _authenticate(token, session)
+        if user is None or not user.is_active:
+            await websocket.close(code=status.WS_1008_POLICY_VIOLATION, reason="Invalid token")
+            return
 
-    if not await _owns_document(doc_id, user, session):
-        await websocket.close(code=status.WS_1008_POLICY_VIOLATION, reason="Document not found")
-        return
+        if not await _owns_document(doc_id, user, session):
+            await websocket.close(code=status.WS_1008_POLICY_VIOLATION, reason="Document not found")
+            return
 
     await websocket.accept()
     try:

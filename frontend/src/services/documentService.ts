@@ -1,5 +1,5 @@
 import type { DocumentSummary, DocumentRead, DocumentCreate, DocumentUpdate } from '../types/document'
-import { getApiUrl, getHeaders } from './api'
+import { getApiUrl, getHeaders, getHeadersNoContentType } from './api'
 import { API_ROUTES, ERROR_MESSAGES } from '../constants/app'
 
 export const ERROR_MESSAGES_DOCS = {
@@ -52,4 +52,20 @@ export async function deleteDocument(id: string): Promise<void> {
     headers: getHeaders(),
   })
   if (!response.ok) throw new Error(ERROR_MESSAGES_DOCS.DELETE_DOCUMENT)
+}
+
+export async function uploadImage(docId: string, file: File): Promise<{ filename: string; url: string }> {
+  const formData = new FormData()
+  formData.append('file', file)
+
+  const response = await fetch(`${getApiUrl()}${API_ROUTES.DOCUMENTOS}/${docId}/images`, {
+    method: 'POST',
+    headers: getHeadersNoContentType(),
+    body: formData,
+  })
+  if (!response.ok) {
+    const err = await response.json().catch(() => null)
+    throw new Error(err?.detail || 'Failed to upload image')
+  }
+  return response.json()
 }

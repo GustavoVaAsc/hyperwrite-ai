@@ -9,7 +9,9 @@ import * as TableRowExtensions from '@tiptap/extension-table-row'
 import * as TableCellExtensions from '@tiptap/extension-table-cell'
 import * as TableHeaderExtensions from '@tiptap/extension-table-header'
 import { BlockMath, InlineMath } from '@tiptap/extension-mathematics'
-import { getDocument, updateDocument } from '../services/documentService'
+import Image from '@tiptap/extension-image'
+import { getDocument, updateDocument, uploadImage } from '../services/documentService'
+import { getApiUrl } from '../services/api'
 import { LaTeXModal } from '../components/modals/LaTeXModal'
 import { useAuthStore } from '../store/authStore'
 import { ERROR_MESSAGES } from '../constants/app'
@@ -55,6 +57,8 @@ export function Editor() {
   const [latexModalOpen, setLatexModalOpen] = useState(false)
   const [editingMath, setEditingMath] = useState<{ latex: string; pos: number; mode: 'inline' | 'block' } | null>(null)
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const titleTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const imageInputRef = useRef<HTMLInputElement | null>(null)
   const [, forceUpdate] = useState(0)
 
   const editor = useEditor({
@@ -72,6 +76,7 @@ export function Editor() {
       TableHeaderExtensions.TableHeader,
       InlineMath.configure({
         onClick: (_node, pos) => {
+          if (!editor) return
           const view = editor.view
           const node = view.state.doc.nodeAt(pos)
           if (node?.attrs.latex) {
@@ -81,12 +86,17 @@ export function Editor() {
       }),
       BlockMath.configure({
         onClick: (_node, pos) => {
+          if (!editor) return
           const view = editor.view
           const node = view.state.doc.nodeAt(pos)
           if (node?.attrs.latex) {
             setEditingMath({ latex: node.attrs.latex, pos, mode: 'block' })
           }
         },
+      }),
+      Image.configure({
+        allowBase64: true,
+        inline: false,
       }),
     ],
     content: '',
@@ -174,15 +184,39 @@ useEffect(() => {
     }
   }, [docId, editor])
 
-  const handleTitleChange = async (title: string) => {
+  const handleTitleChange = (title: string) => {
     if (!docId || !document) return
-    try {
-      const updated = await updateDocument(docId, { title })
-      setDocument(updated)
-    } catch {
-      setError(ERROR_MESSAGES.FAILED_TO_UPDATE_TITLE)
+    setDocument(prev => prev ? { ...prev, title } : prev)
+    if (titleTimeoutRef.current) {
+      clearTimeout(titleTimeoutRef.current)
     }
+    titleTimeoutRef.current = setTimeout(async () => {
+      try {
+        await updateDocument(docId, { title })
+      } catch {
+        setError(ERROR_MESSAGES.FAILED_TO_UPDATE_TITLE)
+      }
+    }, 500)
   }
+
+  const handleImageUpload = useCallback(async (file: File) => {
+    if (!editor || !docId) return
+    if (file.size > 5 * 1024 * 1024) {
+      setError('Image exceeds 5MB limit')
+      return
+    }
+    if (!file.type.startsWith('image/')) {
+      setError('File is not an image')
+      return
+    }
+    try {
+      const { url } = await uploadImage(docId, file)
+      const src = `${getApiUrl()}${url}`
+      editor.chain().focus().setImage({ src }).run()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to upload image')
+    }
+  }, [editor, docId])
 
   const handleContentChangeRef = useRef(() => {
     if (!editor || !docId) return
@@ -220,8 +254,48 @@ useEffect(() => {
       if (saveTimeoutRef.current) {
         clearTimeout(saveTimeoutRef.current)
       }
+      if (titleTimeoutRef.current) {
+        clearTimeout(titleTimeoutRef.current)
+      }
     }
   }, [editor])
+
+  useEffect(() => {
+    if (!editor) return
+
+    const handlePaste = (event: ClipboardEvent) => {
+      const items = event.clipboardData?.items
+      if (!items) return
+      for (const item of items) {
+        if (item.type.startsWith('image/')) {
+          event.preventDefault()
+          const file = item.getAsFile()
+          if (file) handleImageUpload(file)
+          return
+        }
+      }
+    }
+
+    const handleDrop = (event: DragEvent) => {
+      const files = event.dataTransfer?.files
+      if (!files) return
+      for (const file of files) {
+        if (file.type.startsWith('image/')) {
+          event.preventDefault()
+          handleImageUpload(file)
+          return
+        }
+      }
+    }
+
+    const dom = editor.view.dom
+    dom.addEventListener('paste', handlePaste)
+    dom.addEventListener('drop', handleDrop)
+    return () => {
+      dom.removeEventListener('paste', handlePaste)
+      dom.removeEventListener('drop', handleDrop)
+    }
+  }, [editor, handleImageUpload])
 
   const handleLogout = () => {
     logout()
@@ -506,6 +580,28 @@ useEffect(() => {
               <text x="4" y="18" fontSize="16" fontWeight="bold" fontFamily="serif">∑</text>
             </svg>
           </ToolbarButton>
+
+          <ToolbarButton
+            onClick={() => imageInputRef.current?.click()}
+            title="Insert Image"
+          >
+            <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
+              <rect x="3" y="4" width="18" height="16" rx="2" fill="none" stroke="currentColor" strokeWidth="1.5"/>
+              <circle cx="8.5" cy="9.5" r="2" />
+              <path d="M3 16l5-5 4 4 3-3 6 6v1a2 2 0 01-2 2H5a2 2 0 01-2-2v-3z" />
+            </svg>
+          </ToolbarButton>
+          <input
+            ref={imageInputRef}
+            type="file"
+            accept="image/png,image/jpeg,image/gif,image/webp,image/svg+xml"
+            style={{ display: 'none' }}
+            onChange={(e) => {
+              const file = e.target.files?.[0]
+              if (file) handleImageUpload(file)
+              e.target.value = ''
+            }}
+          />
         </div>
       )}
       <main className="editor-content-area">
