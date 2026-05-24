@@ -48,6 +48,7 @@ class FileResponse(BaseModel):
 class FolderDetailResponse(BaseModel):
     id: uuid.UUID
     name: str
+    file_count: int
     files: list[FileResponse]
     created_at: datetime
     updated_at: datetime
@@ -149,6 +150,7 @@ async def get_folder(
     return FolderDetailResponse(
         id=folder.id,
         name=folder.name,
+        file_count=len(file_responses),
         files=file_responses,
         created_at=folder.created_at,
         updated_at=folder.updated_at,
@@ -263,6 +265,16 @@ async def delete_folder(
     session: AsyncSession = Depends(get_async_session),
 ) -> None:
     folder = await get_folder_or_404(knowledge_id, user, session)
+
+    files_stmt = select(KnowledgeFile).where(KnowledgeFile.folder_id == folder.id)
+    files_result = await session.execute(files_stmt)
+    files = files_result.scalars().all()
+    for kf in files:
+        if kf.file_path:
+            path = storage.resolve_file_path(kf.file_path, user.id)
+            if path and path.exists():
+                path.unlink()
+
     await session.delete(folder)
     await session.commit()
 

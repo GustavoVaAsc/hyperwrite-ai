@@ -33,7 +33,8 @@ def resolve_file_path(file_path: str, user_id: int | None = None) -> Path | None
             if expected_base not in [path, *path.parents]:
                 return None
         else:
-            if STORAGE_DIR.resolve() not in [STORAGE_DIR.resolve(), *STORAGE_DIR.resolve().parents]:
+            expected_base = STORAGE_DIR.resolve()
+            if expected_base not in [path, *path.parents]:
                 return None
         if path.exists():
             return path
