@@ -7,6 +7,9 @@ from . import llm
 from .schemas import AgentSchema
 
 
+MAX_TOOL_ITERATIONS = 10
+
+
 class AgentExecutor:
     def __init__(self, agent: AgentSchema, user_id: int):
         self.agent = agent
@@ -17,8 +20,10 @@ class AgentExecutor:
         messages: list[dict[str, str]],
     ) -> AsyncIterator[str]:
         full_response = ""
+        iterations = 0
 
-        while True:
+        while iterations < MAX_TOOL_ITERATIONS:
+            iterations += 1
             content, tool_calls = await llm.complete_with_tools(messages)
 
             if content:
@@ -69,6 +74,9 @@ class AgentExecutor:
                     "tool_call_id": tool_call["id"],
                     "content": result,
                 })
+
+        if iterations >= MAX_TOOL_ITERATIONS:
+            yield "\n\n[Stopped: maximum tool call iterations reached]"
 
     async def execute_simple(self, messages: list[dict[str, str]]) -> str:
         full_response = ""

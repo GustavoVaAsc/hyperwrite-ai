@@ -1,11 +1,16 @@
 from __future__ import annotations
 
+import asyncio
 import re
+import time
 from urllib.parse import quote_plus
 
 import httpx
 
 from .base import BaseTool
+
+_last_search_time: float = 0.0
+_MIN_INTERVAL: float = 2.0
 
 
 class WebSearchTool(BaseTool):
@@ -31,6 +36,12 @@ class WebSearchTool(BaseTool):
         super().__init__(self.name, self.description, self.parameters)
 
     async def execute(self, query: str, max_results: int = 5, **kwargs) -> str:
+        global _last_search_time
+        elapsed = time.time() - _last_search_time
+        if elapsed < _MIN_INTERVAL:
+            await asyncio.sleep(_MIN_INTERVAL - elapsed)
+        _last_search_time = time.time()
+
         try:
             async with httpx.AsyncClient(timeout=30.0) as client:
                 encoded_query = quote_plus(query)
