@@ -245,7 +245,43 @@ docs(api): update authentication docs
 
 ## TODO
 
-- [ ] **Knowledge Base file operations** - Implement file copy, move, and other file management operations between folders in the RAG Knowledge Base
-- [ ] **User documents folder management** - Add folder organization capabilities (create, rename, delete folders) for user documents in the Files section
-- [x] **Knowledge base components refactor** - Review and refactor Knowledge Base components and stylesheets for better maintainability and consistency
-- [x] **Modular deletion confirmation modal** - Create a reusable confirmation modal component for deletions that can be used for both file and folder deletion, replacing the current inline confirmations
+### Editor Enhancements (Priority 1)
+- [ ] **Autocompletion with toggle** - Tab to accept, Escape to dismiss, debounced streaming LLM fetch
+- [x] **LaTeX/Math support** - Inline ($) and block ($$) math, AMSLaTeX, amssymb, matrices (low priority: multiline matrices)
+- [ ] **Image support** - Local server storage per document, Base64 inline, safety checks (size limit, MIME validation), ordered insertion
+- [x] **Table support** - TipTap table extension with resizing and styling
+
+### Editor Enhancements (Priority 2)
+- [ ] **Focus Mode** - Toggle distraction-free mode, dim surroundings, center doc
+- [ ] **Word Count / Reading Time** - Bottom bar with live stats
+- [ ] **Find & Replace** - Ctrl+F inline UI with match highlighting
+- [ ] **Code Blocks** - Syntax highlighting with lowlight
+- [ ] **Callouts/Admonitions** - Markdown-style > [!note] blocks
+
+### Editor Enhancements (Priority 3)
+- [ ] **Export to PDF** - Browser print API integration
+- [ ] **Smart Quotes & Typography** - Auto-convert quotes, proper dashes, ellipses via typography plugin
+- [ ] **Placeholder Text** - Empty document prompt
+
+### Agent & Chat (In Scope)
+- [ ] **Agent Actions Menu** - Select agent + action, stream result to document
+- [ ] **Chat Panel** - WebSocket sidebar with streaming messages
+- [ ] **Custom Agents** - DB-backed agent definitions with RAG folder linking
+- [ ] **MCP Integration** - Tool definitions for web search, RAG lookup
+
+### Reliability / Refactors (Priority 2)
+- [ ] **Document auto-save interval** - Auto-save every 30s while document is dirty, debounced
+- [ ] **Error boundary components** - React Suspense boundaries around async route components to prevent full-page crashes
+- [ ] **API retry logic with exponential backoff** - Service layer with automatic retry (3 attempts, 1s/2s/4s delays)
+- [ ] **JWT refresh token rotation** - New endpoint POST /auth/refresh to issue new access token from refresh token, old token invalidated
+
+### Out of Scope (Future Considerations)
+- Knowledge Base file operations (copy, move between folders)
+- User documents folder management (create, rename, delete folders)
+- Unit tests for backend services
+- Docker healthchecks for inference servers
+- Rate limiting on LLM endpoints
+- Sentry frontend error monitoring
+- Real-time collab (Y.js)
+- Document versioning
+- TikZ diagram rendering
