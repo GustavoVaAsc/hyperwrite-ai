@@ -110,13 +110,39 @@ code {
   background: var(--code-bg);
 }
 
+/* ── Barras de Navegación (Global Fixed & Glassmorphism) ── */
+.nav, .login-nav, .register-nav, .files-nav {
+  position: fixed;
+  top: 0;
+  box-sizing: border-box;
+  z-index: 50;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.login-nav, .register-nav, .files-nav {
+  left: 0;
+  width: 100%;
+}
+
 .nav {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 1rem 2rem;
   border-bottom: 1px solid var(--border);
-  background: var(--bg);
+  background: rgba(255, 255, 255, 0.5);
+  width: 100%;
+  max-width: 1126px;
+  margin: 0 auto;
+  left: 0;
+  right: 0;
+}
+
+@media (prefers-color-scheme: dark) {
+  .nav {
+    background: rgba(22, 23, 29, 0.5);
+  }
 }
 
 .nav-brand a {
@@ -143,7 +169,7 @@ code {
 }
 
 .nav-user {
-  color: var(--text);
+  color: #06B6D4;
   font-size: 0.9rem;
 }
 
@@ -169,6 +195,7 @@ code {
   align-items: center;
   min-height: calc(100svh - 80px);
   padding: 2rem;
+  padding-top: 100px;
 }
 
 .auth-card {
@@ -268,6 +295,7 @@ code {
 
 .page-container {
   padding: 2rem;
+  padding-top: 100px;
   text-align: left;
 }
 

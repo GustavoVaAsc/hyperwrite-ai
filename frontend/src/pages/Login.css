@@ -36,7 +36,7 @@ body:has(.login-page) #root {
   flex-direction: column;
   font-family: var(--font-display);
   position: relative;
-  overflow: hidden;
+  overflow-x: hidden;
 }
 
 /* ── Grid background ────────────────────────────────── */
@@ -83,14 +83,12 @@ body:has(.login-page) #root {
 
 /* ── Nav ────────────────────────────────────────────── */
 .login-nav {
-  position: relative;
-  z-index: 10;
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 20px 40px;
   border-bottom: 1px solid var(--border-sub);
-  backdrop-filter: blur(10px);
+  background: rgba(10, 1, 24, 0.5);
 }
 
 .login-logo {
@@ -150,7 +148,7 @@ body:has(.login-page) #root {
   justify-content: center;
   position: relative;
   z-index: 1;
-  padding: 40px 20px;
+  padding: 100px 20px 40px;
 }
 
 .login-wrapper {
@@ -196,15 +194,18 @@ body:has(.login-page) #root {
   position: relative;
   z-index: 1;
   overflow: hidden;
+  background: var(--bg-card);
 }
 
 .login-card::before {
   content: '';
   position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
+  top: 50%;
+  left: 50%;
+  width: 2000px;
+  height: 2000px;
+  margin-top: -1000px;
+  margin-left: -1000px;
   background: conic-gradient(
     from 0deg,
     var(--border-sub) 0%,
