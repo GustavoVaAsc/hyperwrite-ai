@@ -67,7 +67,7 @@ export function UploadModal({ folder, onUpload, onClose }: UploadModalProps): JS
     if (e.target === e.currentTarget && !isUploading) onClose()
   }, [isUploading, onClose])
 
-  if (!folder) return null
+  if (!folder) return <></>
 
   return (
     <div className="modal-backdrop" onClick={handleBackdropClick}>

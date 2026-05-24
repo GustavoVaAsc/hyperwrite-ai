@@ -5,3 +5,83 @@
   outline: none;
   min-height: 100%;
 }
+
+/* Table Styles - Visible Borders */
+.tiptapEditor table {
+  border-collapse: collapse;
+  margin: 1rem 0;
+  width: 100%;
+  table-layout: fixed;
+  border: 2px solid var(--accent);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.tiptapEditor table td,
+.tiptapEditor table th {
+  border: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  border-right: 1px solid var(--border);
+  padding: 0.6rem 0.8rem;
+  vertical-align: middle;
+  min-width: 60px;
+  background: var(--bg);
+  box-sizing: border-box;
+  position: relative;
+}
+
+.tiptapEditor table th {
+  background: var(--accent);
+  color: white;
+  font-weight: 600;
+  text-align: center;
+}
+
+.tiptapEditor table td:last-child {
+  border-right: none;
+}
+
+.tiptapEditor table th:last-child {
+  border-right: none;
+}
+
+.tiptapEditor table tr:last-child td {
+  border-bottom: none;
+}
+
+.tiptapEditor table tr:last-child th {
+  border-bottom: none;
+}
+
+.tiptapEditor table tr:first-child td {
+  border-top: 2px solid var(--accent);
+}
+
+/* Mathematics/KaTeX Styles */
+.tiptapEditor :global(.tiptap-editor-content .ProseMirror .mathematics) {
+  display: block;
+  text-align: center;
+  margin: 1rem 0;
+  overflow-x: auto;
+}
+
+.tiptapEditor :global(.tiptap-editor-content .ProseMirror .mathematics[data-presentation-mode]) {
+  cursor: pointer;
+}
+
+.tiptapEditor :global(.tiptap-editor-content .ProseMirror .mathematics-display) {
+  display: block;
+  margin: 1rem auto;
+  max-width: 100%;
+  overflow-x: auto;
+  padding: 0.5rem;
+}
+
+.tiptapEditor :global(.tiptap-editor-content .ProseMirror .mathematics-error) {
+  color: #dc2626;
+  font-size: 0.85rem;
+  padding: 0.25rem 0.5rem;
+  background: rgba(220, 38, 38, 0.1);
+  border-radius: 4px;
+  display: inline-block;
+}

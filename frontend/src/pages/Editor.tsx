@@ -4,7 +4,13 @@ import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import TextAlign from '@tiptap/extension-text-align'
 import Underline from '@tiptap/extension-underline'
+import * as TableExtensions from '@tiptap/extension-table'
+import * as TableRowExtensions from '@tiptap/extension-table-row'
+import * as TableCellExtensions from '@tiptap/extension-table-cell'
+import * as TableHeaderExtensions from '@tiptap/extension-table-header'
+import { BlockMath, InlineMath } from '@tiptap/extension-mathematics'
 import { getDocument, updateDocument } from '../services/documentService'
+import { LaTeXModal } from '../components/modals/LaTeXModal'
 import { ERROR_MESSAGES } from '../constants/app'
 import type { DocumentRead } from '../types/document'
 import { ThemeToggle } from '../components/ThemeToggle'
@@ -44,6 +50,8 @@ export function Editor() {
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState('')
+  const [latexModalOpen, setLatexModalOpen] = useState(false)
+  const [editingMath, setEditingMath] = useState<{ latex: string; pos: number; mode: 'inline' | 'block' } | null>(null)
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [, forceUpdate] = useState(0)
 
@@ -54,6 +62,30 @@ export function Editor() {
       TextAlign.configure({
         types: ['heading', 'paragraph'],
       }),
+      TableExtensions.Table.configure({
+        resizable: true,
+      }),
+      TableRowExtensions.TableRow,
+      TableCellExtensions.TableCell,
+      TableHeaderExtensions.TableHeader,
+      InlineMath.configure({
+        onClick: (_node, pos) => {
+          const view = editor.view
+          const node = view.state.doc.nodeAt(pos)
+          if (node?.attrs.latex) {
+            setEditingMath({ latex: node.attrs.latex, pos, mode: 'inline' })
+          }
+        },
+      }),
+      BlockMath.configure({
+        onClick: (_node, pos) => {
+          const view = editor.view
+          const node = view.state.doc.nodeAt(pos)
+          if (node?.attrs.latex) {
+            setEditingMath({ latex: node.attrs.latex, pos, mode: 'block' })
+          }
+        },
+      }),
     ],
     content: '',
     editorProps: {
@@ -62,6 +94,32 @@ export function Editor() {
       },
     },
   })
+
+useEffect(() => {
+    if (!editor) return
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Backspace') {
+        const { state } = editor
+        const { selection } = state
+
+        if (selection.empty && editor.isActive('table')) {
+          const { $from } = selection
+          const isInCellContent = $from.node(1)?.type.name === 'tableCell' || $from.node(1)?.type.name === 'tableHeader'
+          const isAtStartOfCell = $from.parentOffset === 0
+          
+          if (isInCellContent && isAtStartOfCell) {
+            event.preventDefault()
+            editor.chain().focus().deleteTable().run()
+          }
+        }
+      }
+    }
+
+    const dom = editor.view.dom
+    dom.addEventListener('keydown', handleKeyDown)
+    return () => dom.removeEventListener('keydown', handleKeyDown)
+  }, [editor])
 
   const saveDocument = useCallback(
     async (content: Record<string, unknown>) => {
@@ -304,11 +362,146 @@ export function Editor() {
           >
             ≡J
           </ToolbarButton>
+
+          <ToolbarDivider />
+
+          <ToolbarButton
+            onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}
+            title="Insert 3×3 Table"
+          >
+            <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
+              <rect x="3" y="5" width="4" height="4" rx="1" opacity="0.8"/>
+              <rect x="10" y="5" width="4" height="4" rx="1" opacity="0.8"/>
+              <rect x="17" y="5" width="4" height="4" rx="1" opacity="0.8"/>
+              <rect x="3" y="12" width="4" height="4" rx="1"/>
+              <rect x="10" y="12" width="4" height="4" rx="1"/>
+              <rect x="17" y="12" width="4" height="4" rx="1"/>
+              <rect x="3" y="19" width="4" height="2" rx="0.5" opacity="0.5"/>
+              <rect x="10" y="19" width="4" height="2" rx="0.5" opacity="0.5"/>
+              <rect x="17" y="19" width="4" height="2" rx="0.5" opacity="0.5"/>
+            </svg>
+          </ToolbarButton>
+
+          <ToolbarButton
+            onClick={() => editor.chain().focus().addColumnBefore().run()}
+            isActive={editor.isActive('table')}
+            title="Add Column Left"
+          >
+            <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
+              <path d="M4 4h4v16H4z"/>
+              <path d="M10 4h4v16h-4z" opacity="0.5"/>
+              <path d="M16 4l4 4-4 4z"/>
+            </svg>
+          </ToolbarButton>
+          <ToolbarButton
+            onClick={() => editor.chain().focus().addColumnAfter().run()}
+            isActive={editor.isActive('table')}
+            title="Add Column Right"
+          >
+            <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
+              <path d="M20 4h-4v16h4z" opacity="0.5"/>
+              <path d="M14 4h4v16h-4z"/>
+              <path d="M8 4l-4 4 4 4z"/>
+            </svg>
+          </ToolbarButton>
+          <ToolbarButton
+            onClick={() => editor.chain().focus().deleteColumn().run()}
+            isActive={editor.isActive('table')}
+            title="Delete Column"
+          >
+            <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
+              <path d="M10 4H4v16h6z" opacity="0.5"/>
+              <path d="M14 4h6v16h-6z"/>
+              <path d="M12 4l-4 4 4 4z" opacity="0.3"/>
+            </svg>
+          </ToolbarButton>
+          <ToolbarButton
+            onClick={() => editor.chain().focus().addRowBefore().run()}
+            isActive={editor.isActive('table')}
+            title="Add Row Above"
+          >
+            <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
+              <path d="M4 4h16v4H4z" opacity="0.5"/>
+              <path d="M4 10h16v4H4z"/>
+              <path d="M4 16l4-4 4 4z" opacity="0.3"/>
+            </svg>
+          </ToolbarButton>
+          <ToolbarButton
+            onClick={() => editor.chain().focus().addRowAfter().run()}
+            isActive={editor.isActive('table')}
+            title="Add Row Below"
+          >
+            <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
+              <path d="M4 14h16v4H4z" opacity="0.5"/>
+              <path d="M4 4h16v4H4z"/>
+              <path d="M4 20l4-4 4 4z" opacity="0.3"/>
+            </svg>
+          </ToolbarButton>
+          <ToolbarButton
+            onClick={() => editor.chain().focus().deleteRow().run()}
+            isActive={editor.isActive('table')}
+            title="Delete Row"
+          >
+            <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
+              <path d="M4 10h16v4H4z"/>
+              <path d="M4 4h16v4H4z" opacity="0.5"/>
+              <path d="M4 16l4-4 4 4z" opacity="0.3"/>
+            </svg>
+          </ToolbarButton>
+          <ToolbarButton
+            onClick={() => editor.chain().focus().deleteTable().run()}
+            isActive={editor.isActive('table')}
+            title="Delete Table"
+          >
+            <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
+              <path d="M4 4h16v16H4z" fill="none"/>
+              <path d="M9 9l6 6M15 9l-6 6" stroke="currentColor" strokeWidth="2"/>
+            </svg>
+          </ToolbarButton>
+
+          <ToolbarDivider />
+
+          <ToolbarButton
+            onClick={() => setLatexModalOpen(true)}
+            title="Insert Formula"
+          >
+            <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
+              <text x="4" y="18" fontSize="16" fontWeight="bold" fontFamily="serif">∑</text>
+            </svg>
+          </ToolbarButton>
         </div>
       )}
       <main className="editor-content-area">
         <EditorContent editor={editor} />
       </main>
+
+      {(latexModalOpen || editingMath) && (
+        <LaTeXModal
+          mode={editingMath?.mode || 'inline'}
+          initialValue={editingMath?.latex || ''}
+          onInsert={(latex, mathMode) => {
+            if (editingMath) {
+              if (editingMath.mode === 'inline') {
+                editor.chain().focus().updateInlineMath({ latex, pos: editingMath.pos }).run()
+              } else {
+                editor.chain().focus().updateBlockMath({ latex, pos: editingMath.pos }).run()
+              }
+              setEditingMath(null)
+            } else {
+              if (mathMode === 'inline') {
+                editor.chain().focus().insertInlineMath({ latex }).run()
+              } else {
+                editor.chain().focus().insertBlockMath({ latex }).run()
+              }
+              setLatexModalOpen(false)
+            }
+          }}
+          onClose={() => {
+            setLatexModalOpen(false)
+            setEditingMath(null)
+          }}
+        />
+      )}
     </div>
   )
 }

@@ -68,7 +68,7 @@ export function useKnowledge(): UseKnowledgeReturn {
     setFolders(prev => prev.filter((f: KnowledgeFolder) => f.id !== folderId))
   }, [])
 
-  const removeFile = useCallback(async (folderId: string, fileId: string) => {
+  const removeFile = useCallback(async (_folderId: string, fileId: string) => {
     await deleteFile(fileId)
     setCurrentFolder(prev => {
       if (!prev) return prev
