@@ -315,11 +315,11 @@ async def get_conversation_messages(
     return [_message_to_schema(m) for m in messages]
 
 
-@router.get("/tools", response_model=list[ToolSchema])
+@router.get("/tools")
 async def list_tools(
     _: User = Depends(current_active_user),
-) -> list[ToolSchema]:
-    return [ToolSchema(**t) for t in get_all_tool_schemas()]
+) -> list[dict]:
+    return get_all_tool_schemas()
 
 
 def _agent_to_schema(agent) -> AgentSchema:

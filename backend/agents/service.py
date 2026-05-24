@@ -1,6 +1,9 @@
 from __future__ import annotations
 
 import uuid
+from datetime import datetime, timezone
+from typing import Any
+
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 from db.database import AsyncSessionLocal
@@ -229,7 +232,7 @@ async def add_message(
         result = await session.execute(query)
         conversation = result.scalar_one_or_none()
         if conversation:
-            conversation.updated_at = datetime.utcnow()
+            conversation.updated_at = datetime.now(timezone.utc)
 
         await session.commit()
         await session.refresh(message)

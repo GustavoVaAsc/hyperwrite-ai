@@ -25,57 +25,50 @@ class AgentExecutor:
                 full_response += content
                 yield content
 
-            if tool_calls:
-                for tool_call in tool_calls:
-                    tool_name = tool_call["name"]
+            if not tool_calls:
+                break
+
+            assistant_msg: dict = {"role": "assistant", "content": content or ""}
+            assistant_msg["tool_calls"] = [
+                {
+                    "id": tc["id"],
+                    "type": "function",
+                    "function": {"name": tc["name"], "arguments": tc["arguments"]},
+                }
+                for tc in tool_calls
+            ]
+            messages.append(assistant_msg)
+
+            from tools import get_tool
+            for tool_call in tool_calls:
+                tool_name = tool_call["name"]
+                try:
                     tool_args = json.loads(tool_call["arguments"])
+                except json.JSONDecodeError:
+                    tool_args = {}
 
-                    from tools import get_tool
-                    tool = get_tool(tool_name)
-
-                    if not tool:
-                        messages.append({
-                            "role": "assistant",
-                            "content": content,
-                            "tool_calls": tool_calls,
-                        })
-                        messages.append({
-                            "role": "tool",
-                            "tool_call_id": tool_call["id"],
-                            "content": f"Error: Unknown tool '{tool_name}'",
-                        })
-                        continue
-
-                    try:
-                        if tool_name == "rag_lookup":
-                            result = await tool.execute(user_id=self.user_id, **tool_args)
-                        else:
-                            result = await tool.execute(**tool_args)
-                    except Exception as exc:
-                        result = f"Tool execution error: {exc}"
-
-                    messages.append({
-                        "role": "assistant",
-                        "content": content,
-                        "tool_calls": tool_calls,
-                    })
+                tool = get_tool(tool_name)
+                if not tool:
                     messages.append({
                         "role": "tool",
                         "tool_call_id": tool_call["id"],
-                        "content": result,
+                        "content": f"Error: Unknown tool '{tool_name}'",
                     })
-
-                if content:
                     continue
-                else:
-                    next_content, next_tool_calls = await llm.complete_with_tools(messages)
-                    if next_content:
-                        full_response += next_content
-                        yield next_content
-                    if not next_tool_calls:
-                        break
-            else:
-                break
+
+                try:
+                    if tool_name == "rag_lookup":
+                        result = await tool.execute(user_id=self.user_id, **tool_args)
+                    else:
+                        result = await tool.execute(**tool_args)
+                except Exception as exc:
+                    result = f"Tool execution error: {exc}"
+
+                messages.append({
+                    "role": "tool",
+                    "tool_call_id": tool_call["id"],
+                    "content": result,
+                })
 
     async def execute_simple(self, messages: list[dict[str, str]]) -> str:
         full_response = ""
