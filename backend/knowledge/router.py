@@ -4,6 +4,7 @@ import uuid
 from datetime import datetime
 from typing import Any
 
+import aiofiles
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, status
 from pydantic import BaseModel
 from sqlalchemy import select, func
@@ -260,6 +261,62 @@ async def delete_folder(
     await session.commit()
 
 
+@router.get("/file/{file_id}/raw")
+async def get_file_raw(
+    file_id: uuid.UUID,
+    user: User = Depends(current_active_user),
+    session: AsyncSession = Depends(get_async_session),
+):
+    stmt = select(KnowledgeFile).where(
+        KnowledgeFile.id == file_id,
+        KnowledgeFile.owner_id == user.id,
+    )
+    result = await session.execute(stmt)
+    kf = result.scalar_one_or_none()
+
+    if not kf:
+        raise HTTPException(status_code=404, detail="File not found in database")
+
+    if not kf.file_path:
+        raise HTTPException(status_code=404, detail=f"File path not stored for file {file_id}")
+
+    path = storage.resolve_file_path(kf.file_path, user.id)
+    if not path:
+        raise HTTPException(status_code=404, detail=f"File path {kf.file_path} could not be resolved or doesn't exist")
+
+    if not path.exists():
+        raise HTTPException(status_code=404, detail=f"File not found on disk at {path}")
+
+    async with aiofiles.open(path, "rb") as f:
+        content = await f.read()
+
+    return {"content": content.decode("utf-8", errors="replace"), "file_type": kf.file_type, "original_name": kf.original_name}
+
+
+@router.delete("/file/{file_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_file(
+    file_id: uuid.UUID,
+    user: User = Depends(current_active_user),
+    session: AsyncSession = Depends(get_async_session),
+):
+    stmt = select(KnowledgeFile).where(
+        KnowledgeFile.id == file_id,
+        KnowledgeFile.owner_id == user.id,
+    )
+    result = await session.execute(stmt)
+    kf = result.scalar_one_or_none()
+    if not kf:
+        raise HTTPException(status_code=404, detail="File not found")
+
+    if kf.file_path:
+        path = storage.resolve_file_path(kf.file_path, user.id)
+        if path and path.exists():
+            path.unlink()
+
+    await session.delete(kf)
+    await session.commit()
+
+
 @router.get("/file/{file_id}/download")
 async def download_file(
     file_id: uuid.UUID,
@@ -283,8 +340,11 @@ async def download_file(
         raise HTTPException(status_code=404, detail="File not found on disk")
 
     from fastapi.responses import FileResponse
+    media_type = "application/pdf" if kf.file_type == "pdf" else "application/octet-stream"
+    content_disposition_type = "inline" if kf.file_type == "pdf" else "attachment"
     return FileResponse(
         path,
         filename=kf.original_name,
-        media_type="application/octet-stream",
+        media_type=media_type,
+        content_disposition_type=content_disposition_type,
     )
