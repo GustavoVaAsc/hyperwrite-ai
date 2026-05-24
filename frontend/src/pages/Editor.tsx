@@ -10,6 +10,8 @@ import * as TableCellExtensions from '@tiptap/extension-table-cell'
 import * as TableHeaderExtensions from '@tiptap/extension-table-header'
 import { BlockMath, InlineMath } from '@tiptap/extension-mathematics'
 import Image from '@tiptap/extension-image'
+import { SearchReplace } from '../extensions/searchReplace'
+import { FindReplace } from '../components/FindReplace'
 import { getDocument, updateDocument, uploadImage } from '../services/documentService'
 import { getApiUrl } from '../services/api'
 import { LaTeXModal } from '../components/modals/LaTeXModal'
@@ -56,6 +58,7 @@ export function Editor() {
   const [error, setError] = useState('')
   const [latexModalOpen, setLatexModalOpen] = useState(false)
   const [editingMath, setEditingMath] = useState<{ latex: string; pos: number; mode: 'inline' | 'block' } | null>(null)
+  const [showFindReplace, setShowFindReplace] = useState(false)
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const titleTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const imageInputRef = useRef<HTMLInputElement | null>(null)
@@ -98,6 +101,7 @@ export function Editor() {
         allowBase64: true,
         inline: false,
       }),
+      SearchReplace,
     ],
     content: '',
     editorProps: {
@@ -296,6 +300,17 @@ useEffect(() => {
       dom.removeEventListener('drop', handleDrop)
     }
   }, [editor, handleImageUpload])
+
+  useEffect(() => {
+    const handleCtrlF = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+        e.preventDefault()
+        setShowFindReplace(true)
+      }
+    }
+    window.addEventListener('keydown', handleCtrlF)
+    return () => window.removeEventListener('keydown', handleCtrlF)
+  }, [])
 
   const handleLogout = () => {
     logout()
@@ -604,9 +619,26 @@ useEffect(() => {
           />
         </div>
       )}
+      {showFindReplace && editor && (
+        <FindReplace editor={editor} onClose={() => setShowFindReplace(false)} />
+      )}
       <main className="editor-content-area">
         <EditorContent editor={editor} />
       </main>
+
+      {editor && (() => {
+        const text = editor.state.doc.textContent
+        const words = text.trim() ? text.trim().split(/\s+/).length : 0
+        const chars = text.length
+        const readingTime = Math.max(1, Math.ceil(words / 200))
+        return (
+          <footer className="editor-status-bar">
+            <span>{words} {words === 1 ? 'word' : 'words'}</span>
+            <span>{chars} {chars === 1 ? 'character' : 'characters'}</span>
+            <span>~{readingTime} min read</span>
+          </footer>
+        )
+      })()}
 
       {(latexModalOpen || editingMath) && (
         <LaTeXModal

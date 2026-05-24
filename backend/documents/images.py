@@ -101,11 +101,7 @@ async def upload_image(
 async def get_image(
     doc_id: uuid.UUID,
     filename: str,
-    user: User = Depends(current_active_user),
-    session: AsyncSession = Depends(get_async_session),
 ):
-    await _get_owned_document(doc_id, user, session)
-
     safe_filename = Path(filename).name
     file_path = (IMAGES_DIR / str(doc_id) / safe_filename).resolve()
     expected_base = (IMAGES_DIR / str(doc_id)).resolve()
