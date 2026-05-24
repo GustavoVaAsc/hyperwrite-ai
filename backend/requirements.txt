@@ -1,4 +1,5 @@
 alembic==1.18.4
+aiofiles==24.1.0
 annotated-doc==0.0.4
 annotated-types==0.7.0
 anyio==4.13.0
@@ -24,8 +25,10 @@ httpx-oauth==0.17.0
 idna==3.15
 makefun==1.16.0
 Mako==1.3.12
-openai==1.58.1
 MarkupSafe==3.0.3
+openai==2.38.0
+pgvector==0.3.1
+pypdf==6.12.1
 pwdlib==0.2.0
 pycparser==3.0
 pydantic==2.13.4
