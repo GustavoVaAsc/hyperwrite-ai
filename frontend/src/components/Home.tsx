@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { getApiUrl } from '../services/api'
-import { API_ROUTES, ERROR_MESSAGES } from '../constants/app'
+import { ROUTES, ERROR_MESSAGES } from '../constants/app'
 import { useNotificationStore } from '../store/notificationStore'
 import styles from './Home.module.css'
 
@@ -11,7 +11,7 @@ export function Home() {
   useEffect(() => {
     const apiUrl = getApiUrl()
 
-    fetch(`${apiUrl}${API_ROUTES.HOME}`)
+    fetch(`${apiUrl}${ROUTES.HOME}`)
       .then(res => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`)
         return res.json()

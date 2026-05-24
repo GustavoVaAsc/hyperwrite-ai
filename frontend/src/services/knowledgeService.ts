@@ -74,7 +74,7 @@ export async function getFileRaw(fileId: string): Promise<FileRawResponse> {
     headers: getHeaders(),
   })
   if (!response.ok) {
-    let errorDetail = ERROR_MESSAGES_KB.FETCH_FILE_RAW
+    let errorDetail: string = ERROR_MESSAGES_KB.FETCH_FILE_RAW
     try {
       const errorData = await response.json()
       errorDetail = errorData.detail || errorDetail
