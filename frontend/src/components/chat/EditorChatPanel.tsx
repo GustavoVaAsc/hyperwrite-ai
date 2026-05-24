@@ -322,16 +322,7 @@ export function EditorChatPanel() {
       {selectedAgent && <p className="agent-description">{selectedAgent.description}</p>}
 
       <div className="chat-panel-messages">
-        {messages.map((m) => {
-          if (m.role === 'system') {
-            return (
-              <div key={m.id} className="chat-system">
-                <span className="chat-system-line" aria-hidden="true" />
-                <span className="chat-system-text">{m.content}</span>
-                <span className="chat-system-line" aria-hidden="true" />
-              </div>
-            )
-          }
+        {messages.filter((m) => m.role !== 'system').map((m) => {
           if (m.role === 'assistant') {
             return (
               <div key={m.id} className="chat-message chat-message--ai">

@@ -21,6 +21,15 @@ AGENT_SYSTEM_PROMPTS: dict[str, str] = {
     ),
 }
 
+TOOL_SYSTEM_PROMPT = """You have access to tools that you can use to help the user. When you decide to use a tool, respond with the appropriate function call.
+
+Available tools:
+- insert_text: Insert text into the user's document. Use when the user wants to add, append, or insert content into their document.
+- rag_lookup: Search the user's knowledge base for relevant information. Use when answering questions that might be covered in uploaded documents.
+- web_search: Search the web for current information. Use when you need information that might not be in the knowledge base.
+
+After calling a tool, you will receive the result and should continue your response or call another tool if needed."""
+
 
 _ACTION_TEMPLATES: dict[str, str] = {
     "resumir": "Resume el siguiente texto manteniendo las ideas clave:\n\n{text}",

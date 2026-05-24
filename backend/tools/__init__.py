@@ -2,11 +2,13 @@ from __future__ import annotations
 
 from .rag_lookup import RAGLookupTool
 from .web_search import WebSearchTool
+from .insert_text import InsertTextTool
 from .base import BaseTool
 
 TOOLS: dict[str, BaseTool] = {
     "rag_lookup": RAGLookupTool(),
     "web_search": WebSearchTool(),
+    "insert_text": InsertTextTool(),
 }
 
 

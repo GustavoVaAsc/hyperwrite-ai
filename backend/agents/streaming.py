@@ -42,6 +42,7 @@ from db.models import Document, User
 
 from . import llm
 from .executor import AgentExecutor
+from .prompts import TOOL_SYSTEM_PROMPT
 from .schemas import AgentSchema, CapabilitySchema
 from . import service
 
@@ -92,6 +93,50 @@ def _build_messages_from_db(agent: AgentSchema, action: str, text: str, options:
         {"role": "system", "content": agent.system_prompt},
         {"role": "user", "content": user_prompt},
     ]
+
+
+def _tiptap_to_plain_text(doc: dict[str, Any]) -> str:
+    parts = []
+
+    def extract_text(node: dict[str, Any]) -> str:
+        if not isinstance(node, dict):
+            return ""
+        node_type = node.get("type", "")
+        if node_type == "text":
+            return node.get("text", "")
+        if node_type == "paragraph":
+            content = node.get("content", [])
+            return "".join(extract_text(c) for c in content)
+        if node_type in ("heading",):
+            content = node.get("content", [])
+            level = node.get("attrs", {}).get("level", 1)
+            text = "".join(extract_text(c) for c in content)
+            return f"{'#' * level} {text}\n\n"
+        if node_type in ("bulletList", "orderedList"):
+            content = node.get("content", [])
+            return "".join(extract_text(c) for c in content)
+        if node_type == "listItem":
+            content = node.get("content", [])
+            text = "".join(extract_text(c) for c in content)
+            return f"- {text}\n"
+        if node_type == "blockquote":
+            content = node.get("content", [])
+            text = "".join(extract_text(c) for c in content)
+            return f"> {text}\n\n"
+        if node_type == "codeBlock":
+            content = node.get("content", [])
+            text = "".join(extract_text(c) for c in content)
+            return f"```{text}```\n\n"
+        if node_type == "doc":
+            content = node.get("content", [])
+            return "".join(extract_text(c) for c in content)
+        if node_type in ("hardBreak", "horizontalRule"):
+            return "\n---\n"
+        return ""
+
+    text = extract_text(doc)
+    text = text.strip()
+    return text
 
 
 async def _handle_action(
@@ -257,8 +302,21 @@ async def ws_chat(
                 agent_schema = _agent_to_schema(agent)
 
                 messages_history = await service.get_messages_for_conversation(conversation_id, user_id)
+
+                document_content = ""
+                doc_id_str = None
+                if conversation.document_id:
+                    doc_id_str = str(conversation.document_id)
+                    doc = await service.get_document_by_id(conversation.document_id, user_id)
+                    if doc:
+                        doc_json = doc.content_json or {}
+                        doc_text = _tiptap_to_plain_text(doc_json)
+                        if doc_text:
+                            document_content = f"\n\nThe user is currently editing a document with the following content:\n\n{doc_text}\n"
+
+                system_with_tools = agent_schema.system_prompt + "\n\n" + document_content + "\n\n" + TOOL_SYSTEM_PROMPT
                 messages_for_llm = [
-                    {"role": "system", "content": agent_schema.system_prompt}
+                    {"role": "system", "content": system_with_tools}
                 ]
                 for msg in messages_history:
                     messages_for_llm.append({"role": msg.role, "content": msg.content})
@@ -269,7 +327,7 @@ async def ws_chat(
 
                 full_response = ""
                 try:
-                    executor = AgentExecutor(agent_schema, user_id)
+                    executor = AgentExecutor(agent_schema, user_id, doc_id_str)
                     async for delta in executor.execute(messages_for_llm):
                         full_response += delta
                         await websocket.send_json({"type": "token", "text": delta})
@@ -277,6 +335,8 @@ async def ws_chat(
                     await websocket.send_json({"type": "error", "detail": str(exc)})
                     return
 
+                if not full_response:
+                    full_response = "[No response generated]"
                 await service.add_message(conversation_id, "assistant", full_response)
                 await websocket.send_json({"type": "done"})
 

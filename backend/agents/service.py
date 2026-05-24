@@ -7,7 +7,7 @@ from typing import Any
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 from db.database import AsyncSessionLocal
-from db.models import Agent, AgentCapability
+from db.models import Agent, AgentCapability, Document
 
 
 async def get_agents_for_user(user_id: int | None = None) -> list[Agent]:
@@ -255,3 +255,15 @@ async def get_messages_for_conversation(conversation_id: uuid.UUID, user_id: int
         msg_query = select(Message).where(Message.conversation_id == conversation_id).order_by(Message.created_at)
         msg_result = await session.execute(msg_query)
         return list(msg_result.scalars().all())
+
+
+async def get_document_by_id(doc_id: uuid.UUID, user_id: int) -> Document | None:
+    from db.models import Document
+    async with AsyncSessionLocal() as session:
+        query = select(Document).where(
+            Document.uuid == doc_id,
+            Document.owner_id == user_id,
+            Document.archived_at.is_(None),
+        )
+        result = await session.execute(query)
+        return result.scalar_one_or_none()

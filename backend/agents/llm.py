@@ -38,6 +38,12 @@ def _model() -> str:
     return os.getenv("LLM_MODEL", "llama3.2")
 
 
+def _sanitize_content(content: str) -> str:
+    for token in ["<|im_end|>", "<|im_start|>", "<|endoftext|>"]:
+        content = content.replace(token, "")
+    return content
+
+
 async def _retry_complete(messages: list[dict[str, str]], max_retries: int = 3) -> str:
     delays = [1, 2, 4]
     last_error = None
@@ -49,11 +55,12 @@ async def _retry_complete(messages: list[dict[str, str]], max_retries: int = 3) 
                 model=_model(),
                 messages=messages,
                 stream=False,
+                stop=["<|im_end|>"],
             )
             choice = response.choices[0].message.content if response.choices else None
             if not choice:
                 raise LLMError("LLM returned an empty response")
-            return choice
+            return _sanitize_content(choice)
         except (APIConnectionError, APITimeoutError, APIError) as exc:
             last_error = exc
             if attempt < max_retries - 1:
@@ -80,13 +87,14 @@ async def _retry_stream(messages: list[dict[str, str]], max_retries: int = 3) ->
                 model=_model(),
                 messages=messages,
                 stream=True,
+                stop=["<|im_end|>"],
             )
             async for chunk in response:
                 if not chunk.choices:
                     continue
                 delta = chunk.choices[0].delta.content
                 if delta:
-                    yield delta
+                    yield _sanitize_content(delta)
             return
         except (APIConnectionError, APITimeoutError, APIError) as exc:
             last_error = exc
@@ -126,6 +134,7 @@ async def complete_with_tools(
             tools=tools or _tools_schema(),
             tool_choice=tool_choice or "auto",
             stream=False,
+            stop=["<|im_end|>"],
         )
     except (APIConnectionError, APITimeoutError) as exc:
         raise LLMError(f"LLM unreachable: {exc}") from exc
@@ -148,4 +157,4 @@ async def complete_with_tools(
             for tc in choice.tool_calls
         ]
 
-    return content, tool_calls
+    return _sanitize_content(content), tool_calls

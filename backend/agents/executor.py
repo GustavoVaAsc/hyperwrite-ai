@@ -11,9 +11,10 @@ MAX_TOOL_ITERATIONS = 10
 
 
 class AgentExecutor:
-    def __init__(self, agent: AgentSchema, user_id: int):
+    def __init__(self, agent: AgentSchema, user_id: int, document_id: str | None = None):
         self.agent = agent
         self.user_id = user_id
+        self.document_id = document_id
 
     async def execute(
         self,
@@ -52,6 +53,9 @@ class AgentExecutor:
                 except json.JSONDecodeError:
                     tool_args = {}
 
+                if tool_name == "insert_text" and self.document_id:
+                    tool_args["document_id"] = self.document_id
+
                 tool = get_tool(tool_name)
                 if not tool:
                     messages.append({
@@ -63,6 +67,8 @@ class AgentExecutor:
 
                 try:
                     if tool_name == "rag_lookup":
+                        result = await tool.execute(user_id=self.user_id, **tool_args)
+                    elif tool_name == "insert_text":
                         result = await tool.execute(user_id=self.user_id, **tool_args)
                     else:
                         result = await tool.execute(**tool_args)
