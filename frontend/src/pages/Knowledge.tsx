@@ -4,28 +4,10 @@ import { FolderItem } from '../components/knowledge/FolderItem'
 import { FileItem } from '../components/knowledge/FileItem'
 import { FileViewer } from '../components/knowledge/FileViewer'
 import { UploadModal } from '../components/knowledge/UploadModal'
+import { ConfirmModal } from '../components/modals/ConfirmModal'
+import { useNotificationStore } from '../store/notificationStore'
 import type { KnowledgeFolder, KnowledgeFile } from '../types/knowledge'
-
-interface DeleteConfirmModalProps {
-  fileName: string
-  onConfirm: () => void
-  onCancel: () => void
-}
-
-function DeleteConfirmModal({ fileName, onConfirm, onCancel }: DeleteConfirmModalProps): JSX.Element {
-  return (
-    <div className="modal-backdrop" onClick={onCancel}>
-      <div className="modal-content delete-confirm-modal" onClick={e => e.stopPropagation()}>
-        <h3>Delete File</h3>
-        <p>Are you sure you want to delete "{fileName}"? This action cannot be undone.</p>
-        <div className="modal-actions">
-          <button onClick={onCancel}>Cancel</button>
-          <button className="danger" onClick={onConfirm}>Delete</button>
-        </div>
-      </div>
-    </div>
-  )
-}
+import { deleteFolder } from '../services/knowledgeService'
 
 export function Knowledge(): JSX.Element {
   const {
@@ -37,11 +19,12 @@ export function Knowledge(): JSX.Element {
     loadFolders,
     loadFolderDetail,
     createNewFolder,
-    removeFolder,
     removeFile,
     uploadFileToFolder,
     goBack,
+    setFolders,
   } = useKnowledge()
+  const addAlert = useNotificationStore((s) => s.addAlert)
 
   const [showNewFolderModal, setShowNewFolderModal] = useState(false)
   const [newFolderName, setNewFolderName] = useState('')
@@ -58,7 +41,14 @@ export function Knowledge(): JSX.Element {
   }
 
   const handleDeleteFolder = async (folderId: string) => {
-    await removeFolder(folderId)
+    const originalFolders = folders
+    setFolders((prev) => prev.filter((f) => f.id !== folderId))
+    try {
+      await deleteFolder(folderId)
+    } catch {
+      setFolders(originalFolders)
+      addAlert('error', 'Failed to delete folder')
+    }
   }
 
   const handleDeleteFileClick = (file: KnowledgeFile) => {
@@ -246,8 +236,9 @@ export function Knowledge(): JSX.Element {
       )}
 
       {deleteConfirm.show && deleteConfirm.file && (
-        <DeleteConfirmModal
-          fileName={deleteConfirm.file.original_name}
+        <ConfirmModal
+          title="Delete File"
+          message={`Are you sure you want to delete "${deleteConfirm.file.original_name}"? This action cannot be undone.`}
           onConfirm={handleConfirmDelete}
           onCancel={handleCancelDelete}
         />
