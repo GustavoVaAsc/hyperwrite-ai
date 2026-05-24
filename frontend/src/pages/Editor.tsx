@@ -55,6 +55,7 @@ export function Editor() {
   const [latexModalOpen, setLatexModalOpen] = useState(false)
   const [editingMath, setEditingMath] = useState<{ latex: string; pos: number; mode: 'inline' | 'block' } | null>(null)
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const titleTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [, forceUpdate] = useState(0)
 
   const editor = useEditor({
@@ -72,6 +73,7 @@ export function Editor() {
       TableHeaderExtensions.TableHeader,
       InlineMath.configure({
         onClick: (_node, pos) => {
+          if (!editor) return
           const view = editor.view
           const node = view.state.doc.nodeAt(pos)
           if (node?.attrs.latex) {
@@ -81,6 +83,7 @@ export function Editor() {
       }),
       BlockMath.configure({
         onClick: (_node, pos) => {
+          if (!editor) return
           const view = editor.view
           const node = view.state.doc.nodeAt(pos)
           if (node?.attrs.latex) {
@@ -174,14 +177,19 @@ useEffect(() => {
     }
   }, [docId, editor])
 
-  const handleTitleChange = async (title: string) => {
+  const handleTitleChange = (title: string) => {
     if (!docId || !document) return
-    try {
-      const updated = await updateDocument(docId, { title })
-      setDocument(updated)
-    } catch {
-      setError(ERROR_MESSAGES.FAILED_TO_UPDATE_TITLE)
+    setDocument(prev => prev ? { ...prev, title } : prev)
+    if (titleTimeoutRef.current) {
+      clearTimeout(titleTimeoutRef.current)
     }
+    titleTimeoutRef.current = setTimeout(async () => {
+      try {
+        await updateDocument(docId, { title })
+      } catch {
+        setError(ERROR_MESSAGES.FAILED_TO_UPDATE_TITLE)
+      }
+    }, 500)
   }
 
   const handleContentChangeRef = useRef(() => {
@@ -219,6 +227,9 @@ useEffect(() => {
       editor.off('transaction', transactionHandler)
       if (saveTimeoutRef.current) {
         clearTimeout(saveTimeoutRef.current)
+      }
+      if (titleTimeoutRef.current) {
+        clearTimeout(titleTimeoutRef.current)
       }
     }
   }, [editor])

@@ -184,6 +184,12 @@ async def upload_file(
 ) -> UploadResponse:
     folder = await get_folder_or_404(folder_id, user, session)
 
+    if not file.filename:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Filename is required",
+        )
+
     ext = file.filename.split(".")[-1] if "." in file.filename else ""
     if ext.lower() not in ALLOWED_EXTENSIONS:
         raise HTTPException(
