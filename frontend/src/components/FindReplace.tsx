@@ -1,6 +1,6 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import type { Editor } from '@tiptap/react'
-import type { SearchReplaceStorage, SearchReplaceCommands } from '../extensions/searchReplace'
+import { searchReplacePluginKey, type SearchReplaceCommands } from '../extensions/searchReplace'
 
 interface FindReplaceProps {
   editor: Editor
@@ -11,21 +11,41 @@ export function FindReplace({ editor, onClose }: FindReplaceProps) {
   const [findValue, setFindValue] = useState('')
   const [replaceValue, setReplaceValue] = useState('')
   const [showReplace, setShowReplace] = useState(false)
+  const [matchCount, setMatchCount] = useState(0)
+  const [activeIdx, setActiveIdx] = useState(0)
   const findInputRef = useRef<HTMLInputElement>(null)
 
   const cmd = editor.commands as unknown as SearchReplaceCommands
-  const storage = (editor.storage as unknown as Record<string, unknown>).searchReplace as SearchReplaceStorage
-  const { results, activeIndex } = storage
 
   useEffect(() => {
     findInputRef.current?.focus()
   }, [])
 
+  const syncState = useCallback(() => {
+    if (editor.isDestroyed) return
+    const pluginState = searchReplacePluginKey.getState(editor.state)
+    if (pluginState) {
+      setMatchCount(pluginState.results.length)
+      setActiveIdx(pluginState.activeIndex)
+    }
+  }, [editor])
+
+  useEffect(() => {
+    syncState()
+    editor.on('transaction', syncState)
+    return () => {
+      editor.off('transaction', syncState)
+    }
+  }, [editor, syncState])
+
   useEffect(() => {
     return () => {
-      cmd.setSearchTerm('')
+      if (!editor.isDestroyed) {
+        cmd.setSearchTerm('')
+      }
     }
-  }, [cmd])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const handleFindChange = (value: string) => {
     setFindValue(value)
@@ -61,7 +81,7 @@ export function FindReplace({ editor, onClose }: FindReplaceProps) {
           onChange={(e) => handleFindChange(e.target.value)}
         />
         <span className="find-replace-count">
-          {results.length > 0 ? `${activeIndex + 1}/${results.length}` : '0/0'}
+          {matchCount > 0 ? `${activeIdx + 1}/${matchCount}` : '0/0'}
         </span>
         <button
           className="find-replace-btn"

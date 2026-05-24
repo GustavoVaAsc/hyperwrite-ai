@@ -3,10 +3,8 @@ import { Plugin, PluginKey } from '@tiptap/pm/state'
 import { Decoration, DecorationSet } from '@tiptap/pm/view'
 import type { Node as PmNode } from '@tiptap/pm/model'
 
-export interface SearchReplaceStorage {
+export interface SearchReplaceState {
   searchTerm: string
-  replaceTerm: string
-  results: { from: number; to: number }[]
   activeIndex: number
 }
 
@@ -19,7 +17,11 @@ export interface SearchReplaceCommands {
   replaceAll: () => boolean
 }
 
-const searchReplacePluginKey = new PluginKey('searchReplace')
+export interface SearchReplaceStorage {
+  replaceTerm: string
+}
+
+export const searchReplacePluginKey = new PluginKey<{ searchTerm: string; activeIndex: number; results: { from: number; to: number }[] }>('searchReplace')
 
 function findMatches(doc: PmNode, searchTerm: string): { from: number; to: number }[] {
   if (!searchTerm) return []
@@ -42,113 +44,113 @@ export const SearchReplace = Extension.create<object, SearchReplaceStorage>({
 
   addStorage() {
     return {
-      searchTerm: '',
       replaceTerm: '',
-      results: [],
-      activeIndex: 0,
     }
   },
 
   addCommands() {
     return {
-      setSearchTerm: (term: string) => ({ editor }: any) => {
-        editor.storage.searchReplace.searchTerm = term
-        editor.storage.searchReplace.results = findMatches(editor.state.doc, term)
-        editor.storage.searchReplace.activeIndex = 0
-        editor.view.dispatch(editor.state.tr.setMeta(searchReplacePluginKey, { updated: true }))
+      setSearchTerm: (term: string) => ({ tr, dispatch }: any) => {
+        if (dispatch) {
+          dispatch(tr.setMeta(searchReplacePluginKey, { type: 'setSearch', term }))
+        }
         return true
       },
       setReplaceTerm: (term: string) => ({ editor }: any) => {
         editor.storage.searchReplace.replaceTerm = term
         return true
       },
-      nextMatch: () => ({ editor }: any) => {
-        const { results, activeIndex } = editor.storage.searchReplace
-        if (results.length === 0) return false
-        editor.storage.searchReplace.activeIndex = (activeIndex + 1) % results.length
-        editor.view.dispatch(editor.state.tr.setMeta(searchReplacePluginKey, { updated: true }))
+      nextMatch: () => ({ tr, dispatch }: any) => {
+        if (dispatch) {
+          dispatch(tr.setMeta(searchReplacePluginKey, { type: 'next' }))
+        }
         return true
       },
-      previousMatch: () => ({ editor }: any) => {
-        const { results, activeIndex } = editor.storage.searchReplace
-        if (results.length === 0) return false
-        editor.storage.searchReplace.activeIndex = (activeIndex - 1 + results.length) % results.length
-        editor.view.dispatch(editor.state.tr.setMeta(searchReplacePluginKey, { updated: true }))
+      previousMatch: () => ({ tr, dispatch }: any) => {
+        if (dispatch) {
+          dispatch(tr.setMeta(searchReplacePluginKey, { type: 'previous' }))
+        }
         return true
       },
       replaceCurrent: () => ({ editor }: any) => {
-        const { results, activeIndex, replaceTerm } = editor.storage.searchReplace
-        if (results.length === 0) return false
-        const match = results[activeIndex]
+        const pluginState = searchReplacePluginKey.getState(editor.state)
+        if (!pluginState || pluginState.results.length === 0) return false
+        const match = pluginState.results[pluginState.activeIndex]
+        if (!match) return false
+        const { replaceTerm } = editor.storage.searchReplace
         editor.chain()
           .focus()
           .insertContentAt({ from: match.from, to: match.to }, replaceTerm)
           .run()
-        editor.storage.searchReplace.results = findMatches(editor.state.doc, editor.storage.searchReplace.searchTerm)
-        if (editor.storage.searchReplace.activeIndex >= editor.storage.searchReplace.results.length) {
-          editor.storage.searchReplace.activeIndex = 0
-        }
-        editor.view.dispatch(editor.state.tr.setMeta(searchReplacePluginKey, { updated: true }))
         return true
       },
       replaceAll: () => ({ editor }: any) => {
-        const { searchTerm, replaceTerm } = editor.storage.searchReplace
-        if (!searchTerm) return false
-        const results = findMatches(editor.state.doc, searchTerm)
+        const pluginState = searchReplacePluginKey.getState(editor.state)
+        if (!pluginState || pluginState.results.length === 0) return false
+        const { replaceTerm } = editor.storage.searchReplace
         const { tr } = editor.state
+        const results = [...pluginState.results]
         for (let i = results.length - 1; i >= 0; i--) {
           tr.insertText(replaceTerm, results[i].from, results[i].to)
         }
         editor.view.dispatch(tr)
-        editor.storage.searchReplace.results = []
-        editor.storage.searchReplace.activeIndex = 0
-        editor.view.dispatch(editor.state.tr.setMeta(searchReplacePluginKey, { updated: true }))
         return true
       },
     } as any
   },
 
   addProseMirrorPlugins() {
-    const extension = this
-
     return [
       new Plugin({
         key: searchReplacePluginKey,
         state: {
           init() {
-            return DecorationSet.empty
+            return { searchTerm: '', activeIndex: 0, results: [] as { from: number; to: number }[] }
           },
-          apply(tr, oldState, _oldEditorState, newEditorState) {
+          apply(tr, prev, _oldState, newState) {
             const meta = tr.getMeta(searchReplacePluginKey)
-            const docChanged = tr.docChanged
+            let { searchTerm, activeIndex, results } = prev
 
-            if (!meta && !docChanged) return oldState
-
-            const { searchTerm } = extension.storage
-            if (!searchTerm) return DecorationSet.empty
-
-            if (docChanged) {
-              extension.storage.results = findMatches(newEditorState.doc, searchTerm)
-              if (extension.storage.activeIndex >= extension.storage.results.length) {
-                extension.storage.activeIndex = 0
+            if (meta) {
+              if (meta.type === 'setSearch') {
+                searchTerm = meta.term
+                results = findMatches(newState.doc, searchTerm)
+                activeIndex = 0
+              } else if (meta.type === 'next') {
+                if (results.length > 0) {
+                  activeIndex = (activeIndex + 1) % results.length
+                }
+              } else if (meta.type === 'previous') {
+                if (results.length > 0) {
+                  activeIndex = (activeIndex - 1 + results.length) % results.length
+                }
               }
+            } else if (tr.docChanged && searchTerm) {
+              results = findMatches(newState.doc, searchTerm)
+              if (activeIndex >= results.length) {
+                activeIndex = Math.max(0, results.length - 1)
+              }
+            } else {
+              return prev
             }
 
-            const decorations: Decoration[] = []
-            extension.storage.results.forEach((match, i) => {
-              decorations.push(
-                Decoration.inline(match.from, match.to, {
-                  class: i === extension.storage.activeIndex ? 'search-match-active' : 'search-match',
-                })
-              )
-            })
-
-            return DecorationSet.create(newEditorState.doc, decorations)
+            return { searchTerm, activeIndex, results }
           },
         },
         props: {
           decorations(state) {
-            return this.getState(state)
+            const pluginState = this.getState(state)
+            if (!pluginState || !pluginState.searchTerm || pluginState.results.length === 0) {
+              return DecorationSet.empty
+            }
+
+            const decorations: Decoration[] = pluginState.results.map((match, i) =>
+              Decoration.inline(match.from, match.to, {
+                class: i === pluginState.activeIndex ? 'search-match-active' : 'search-match',
+              })
+            )
+
+            return DecorationSet.create(state.doc, decorations)
           },
         },
       }),
