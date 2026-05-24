@@ -38,14 +38,12 @@ export function FindReplace({ editor, onClose }: FindReplaceProps) {
     }
   }, [editor, syncState])
 
-  useEffect(() => {
-    return () => {
-      if (!editor.isDestroyed) {
-        cmd.setSearchTerm('')
-      }
+  const handleClose = () => {
+    if (!editor.isDestroyed) {
+      cmd.setSearchTerm('')
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+    onClose()
+  }
 
   const handleFindChange = (value: string) => {
     setFindValue(value)
@@ -59,7 +57,7 @@ export function FindReplace({ editor, onClose }: FindReplaceProps) {
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Escape') {
-      onClose()
+      handleClose()
     } else if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
       cmd.nextMatch()
@@ -106,7 +104,7 @@ export function FindReplace({ editor, onClose }: FindReplaceProps) {
         </button>
         <button
           className="find-replace-btn find-replace-close"
-          onClick={onClose}
+          onClick={handleClose}
           title="Close (Esc)"
         >
           &#x2715;

@@ -9,7 +9,7 @@ import * as TableRowExtensions from '@tiptap/extension-table-row'
 import * as TableCellExtensions from '@tiptap/extension-table-cell'
 import * as TableHeaderExtensions from '@tiptap/extension-table-header'
 import { BlockMath, InlineMath } from '@tiptap/extension-mathematics'
-import Image from '@tiptap/extension-image'
+import { ResizableImage } from '../extensions/resizableImage'
 import { SearchReplace } from '../extensions/searchReplace'
 import { FindReplace } from '../components/FindReplace'
 import { getDocument, updateDocument, uploadImage } from '../services/documentService'
@@ -98,7 +98,7 @@ export function Editor() {
           }
         },
       }),
-      Image.configure({
+      ResizableImage.configure({
         allowBase64: true,
         inline: false,
       }),
@@ -598,6 +598,23 @@ useEffect(() => {
           </ToolbarButton>
 
           <ToolbarButton
+            onClick={() => {
+              const prevTitle = window.document.title
+              window.document.title = document?.title || 'Document'
+              window.print()
+              window.document.title = prevTitle
+            }}
+            title="Export PDF (Ctrl+P)"
+          >
+            <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
+              <path d="M6 2h12v4H6z" opacity="0.5"/>
+              <path d="M4 8h16v8H4z"/>
+              <rect x="6" y="14" width="12" height="8" fill="white" rx="1"/>
+              <path d="M8 17h8M8 20h5" stroke="currentColor" strokeWidth="1"/>
+            </svg>
+          </ToolbarButton>
+
+          <ToolbarButton
             onClick={() => imageInputRef.current?.click()}
             title="Insert Image"
           >
@@ -620,18 +637,15 @@ useEffect(() => {
           />
         </div>
       )}
+      {showFindReplace && editor && (
+        <FindReplace editor={editor} onClose={() => setShowFindReplace(false)} />
+      )}
       <div className="editor-main-layout">
         <main className="editor-content-area">
           <EditorContent editor={editor} />
         </main>
         <EditorChatPanel />
       </div>
-      {showFindReplace && editor && (
-        <FindReplace editor={editor} onClose={() => setShowFindReplace(false)} />
-      )}
-      <main className="editor-content-area">
-        <EditorContent editor={editor} />
-      </main>
 
       {editor && (() => {
         const text = editor.state.doc.textContent
