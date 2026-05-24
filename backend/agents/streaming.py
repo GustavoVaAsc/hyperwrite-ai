@@ -41,8 +41,9 @@ from db.database import AsyncSessionLocal
 from db.models import Document, User
 
 from . import llm
-from .prompts import build_messages
-from .registry import agent_supports
+from .executor import AgentExecutor
+from .schemas import AgentSchema, CapabilitySchema
+from . import service
 
 router = APIRouter()
 
@@ -66,36 +67,113 @@ async def _owns_document(doc_id: uuid.UUID, user: User, session: AsyncSession) -
     return result.scalar_one_or_none() is not None
 
 
-async def _handle_action(websocket: WebSocket, payload: dict[str, Any]) -> None:
+def _build_messages_from_db(agent: AgentSchema, action: str, text: str, options: dict[str, Any] | None) -> list[dict[str, str]]:
+    cap = next((c for c in agent.capabilities if c.id == action), None)
+    if not cap:
+        raise ValueError(f"Agent '{agent.agent_id}' does not support action '{action}'")
+
+    defaults: dict[str, Any] = {}
+    if action == "traducir":
+        defaults["target_language"] = "inglés"
+    elif action == "cambiar_tono":
+        defaults["tone"] = "formal"
+
+    resolved = {"text": text, **defaults}
+    if options:
+        resolved.update(options)
+
+    try:
+        user_prompt = cap.action_template.format(**resolved)
+    except KeyError as exc:
+        missing = exc.args[0]
+        raise ValueError(f"Missing required option '{missing}' for action '{action}'") from exc
+
+    return [
+        {"role": "system", "content": agent.system_prompt},
+        {"role": "user", "content": user_prompt},
+    ]
+
+
+async def _handle_action(
+    websocket: WebSocket,
+    payload: dict[str, Any],
+    user_id: int | None = None,
+) -> None:
     agent_id = payload.get("agent_id")
     action = payload.get("action")
     text = payload.get("text")
     options = payload.get("options")
+    conversation_id = payload.get("conversation_id")
 
     if not isinstance(agent_id, str) or not isinstance(action, str) or not isinstance(text, str) or not text:
         await websocket.send_json({"type": "error", "detail": "Missing agent_id, action, or text"})
         return
-    if not agent_supports(agent_id, action):
+
+    agent = await service.get_agent_by_agent_id(agent_id)
+    if agent is None:
         await websocket.send_json({
             "type": "error",
-            "detail": f"Agent '{agent_id}' does not support action '{action}'",
+            "detail": f"Agent '{agent_id}' not found",
         })
         return
 
+    agent_schema = _agent_to_schema(agent)
+
     try:
-        messages = build_messages(agent_id, action, text, options)
+        messages = _build_messages_from_db(agent_schema, action, text, options)
     except ValueError as exc:
         await websocket.send_json({"type": "error", "detail": str(exc)})
         return
 
+    full_response = ""
     try:
-        async for delta in llm.stream(messages):
+        executor = AgentExecutor(agent_schema, user_id or 0)
+        async for delta in executor.execute(messages):
+            full_response += delta
             await websocket.send_json({"type": "token", "text": delta})
     except llm.LLMError as exc:
         await websocket.send_json({"type": "error", "detail": str(exc)})
         return
 
-    await websocket.send_json({"type": "done"})
+    if conversation_id and user_id:
+        try:
+            conv_uuid = uuid.UUID(conversation_id) if isinstance(conversation_id, str) else conversation_id
+            await service.add_message(conv_uuid, "user", text)
+            await service.add_message(conv_uuid, "assistant", full_response)
+        except Exception:
+            pass
+
+    cap = next((c for c in agent_schema.capabilities if c.id == action), None)
+    await websocket.send_json({
+        "type": "done",
+        "metadata": {
+            "action": action,
+            "agent_id": agent_schema.agent_id,
+            "agent_name": agent_schema.name,
+            "capability": cap.name if cap else action,
+        } if cap else None,
+    })
+
+
+def _agent_to_schema(agent) -> AgentSchema:
+    return AgentSchema(
+        id=agent.id,
+        agent_id=agent.agent_id,
+        name=agent.name,
+        description=agent.description,
+        system_prompt=agent.system_prompt,
+        is_builtin=agent.is_builtin,
+        capabilities=[
+            CapabilitySchema(
+                id=c.capability_id,
+                name=c.name,
+                description=c.description,
+                action_template=c.action_template,
+            )
+            for c in agent.capabilities
+        ],
+        linked_folder_ids=[f.id for f in agent.linked_folders] if hasattr(agent, 'linked_folders') else [],
+    )
 
 
 @router.websocket("/ws/editor/{doc_id}")
@@ -108,6 +186,7 @@ async def ws_editor(
         await websocket.close(code=status.WS_1008_POLICY_VIOLATION, reason="Missing token")
         return
 
+    user_id: int | None = None
     async with AsyncSessionLocal() as session:
         user = await _authenticate(token, session)
         if user is None or not user.is_active:
@@ -118,13 +197,89 @@ async def ws_editor(
             await websocket.close(code=status.WS_1008_POLICY_VIOLATION, reason="Document not found")
             return
 
+        user_id = user.id
+
     await websocket.accept()
     try:
         while True:
             payload = await websocket.receive_json()
             msg_type = payload.get("type")
             if msg_type == "action":
-                await _handle_action(websocket, payload)
+                await _handle_action(websocket, payload, user_id)
+            elif msg_type == "ping":
+                await websocket.send_json({"type": "pong"})
+            else:
+                await websocket.send_json({
+                    "type": "error",
+                    "detail": f"Unknown message type: {msg_type!r}",
+                })
+    except WebSocketDisconnect:
+        return
+
+
+@router.websocket("/ws/chat/{conversation_id}")
+async def ws_chat(
+    websocket: WebSocket,
+    conversation_id: uuid.UUID,
+    token: str | None = None,
+) -> None:
+    if not token:
+        await websocket.close(code=status.WS_1008_POLICY_VIOLATION, reason="Missing token")
+        return
+
+    user_id: int | None = None
+    async with AsyncSessionLocal() as session:
+        user = await _authenticate(token, session)
+        if user is None or not user.is_active:
+            await websocket.close(code=status.WS_1008_POLICY_VIOLATION, reason="Invalid token")
+            return
+
+        conversation = await service.get_conversation_by_id(conversation_id, user.id)
+        if conversation is None:
+            await websocket.close(code=status.WS_1008_POLICY_VIOLATION, reason="Conversation not found")
+            return
+
+        user_id = user.id
+
+    await websocket.accept()
+    try:
+        while True:
+            payload = await websocket.receive_json()
+            msg_type = payload.get("type")
+            if msg_type == "message":
+                content = payload.get("content")
+                if not content:
+                    await websocket.send_json({"type": "error", "detail": "Missing content"})
+                    continue
+
+                conversation = await service.get_conversation_by_id(conversation_id, user_id)
+                agent = await service.get_agent_by_id(conversation.agent_id)
+                agent_schema = _agent_to_schema(agent)
+
+                messages_history = await service.get_messages_for_conversation(conversation_id, user_id)
+                messages_for_llm = [
+                    {"role": "system", "content": agent_schema.system_prompt}
+                ]
+                for msg in messages_history:
+                    messages_for_llm.append({"role": msg.role, "content": msg.content})
+                messages_for_llm.append({"role": "user", "content": content})
+
+                await service.add_message(conversation_id, "user", content)
+                await websocket.send_json({"type": "token", "text": ""})
+
+                full_response = ""
+                try:
+                    executor = AgentExecutor(agent_schema, user_id)
+                    async for delta in executor.execute(messages_for_llm):
+                        full_response += delta
+                        await websocket.send_json({"type": "token", "text": delta})
+                except llm.LLMError as exc:
+                    await websocket.send_json({"type": "error", "detail": str(exc)})
+                    return
+
+                await service.add_message(conversation_id, "assistant", full_response)
+                await websocket.send_json({"type": "done"})
+
             elif msg_type == "ping":
                 await websocket.send_json({"type": "pong"})
             else:
