@@ -228,15 +228,15 @@ export function Files() {
                       <span className="file-title">{doc.title || 'Untitled'}</span>
                       <span className="file-date">{formatDate(doc.updated_at)}</span>
                     </div>
-                    <button
-                      onClick={(e) => handleDeleteDocument(doc.id, e)}
-                      className="btn-delete"
-                      aria-label="Delete document"
-                      title="Delete document"
-                    >
-                      <IconTrash />
-                    </button>
                   </a>
+                  <button
+                    onClick={(e) => handleDeleteDocument(doc.id, e)}
+                    className="btn-delete"
+                    aria-label="Delete document"
+                    title="Delete document"
+                  >
+                    <IconTrash />
+                  </button>
                 </li>
               ))}
             </ul>

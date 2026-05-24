@@ -266,15 +266,12 @@ body:has(.files-page) #root {
   position: relative;
   border-radius: 16px;
   overflow: hidden;
-  box-shadow: inset 0 0 0 1px var(--border-sub);
-  transition: transform 0.18s, box-shadow 0.2s;
+  transition: transform 0.18s;
   z-index: 1;
-  background: var(--bg-card);
 }
 
 .file-item:hover {
   transform: translateX(6px);
-  box-shadow: inset 0 0 0 0px transparent; 
 }
 
 .file-item::before {
@@ -288,8 +285,8 @@ body:has(.files-page) #root {
   margin-left: -1000px;
   background: conic-gradient(
     from 0deg,
-    var(--border-sub) 0%,
-    var(--border-sub) 75%,
+    transparent 0%,
+    transparent 75%,
     var(--purple) 90%,
     var(--pink) 100%
   );
@@ -309,7 +306,7 @@ body:has(.files-page) #root {
   position: absolute;
   inset: 1px;
   background: var(--bg-card);
-  border-radius: 15px;   
+  border-radius: 15px;
   z-index: -1;
 }
 
@@ -322,21 +319,24 @@ body:has(.files-page) #root {
   text-decoration: none;
   color: inherit;
   display: flex;
-  align-items: center;
+  align-items: center !important;
   gap: 16px;
-  padding: 20px 20px 20px 20px;
+  padding: 20px;
+  padding-right: 56px;
   position: relative;
   z-index: 1;
   background: transparent !important;
   border: none !important;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .file-icon {
   width: 48px;
   height: 48px;
   display: flex;
-  align-items: center;
-  justify-content: center;
+  align-items: center !important;
+  justify-content: center !important;
   border-radius: 12px;
   background: rgba(124, 58, 237, 0.12);
   border: 1px solid var(--border-sub);
@@ -351,12 +351,19 @@ body:has(.files-page) #root {
   color: var(--pink);
 }
 
+.file-icon svg {
+  margin: 0 !important;
+  display: block;
+}
+
 .file-info {
   flex: 1;
   display: flex;
   flex-direction: column;
   gap: 5px;
   min-width: 0;
+  justify-content: center;
+  margin-top: 2px;
 }
 
 .file-title {
@@ -367,6 +374,7 @@ body:has(.files-page) #root {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  line-height: 1.1;
 }
 
 .file-date {
@@ -375,6 +383,7 @@ body:has(.files-page) #root {
   color: var(--cyan);
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  line-height: 1;
 }
 
 .btn-delete {
@@ -383,16 +392,17 @@ body:has(.files-page) #root {
   color: var(--text-muted);
   width: 34px;
   height: 34px;
-  border-radius: 90%;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   opacity: 0;
-  flex-shrink: 0;
-  margin-right: 4px;
-  position: relative;
-  z-index: 2;
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
   transition: opacity 0.2s, background 0.2s, color 0.2s, border-color 0.2s, transform 0.15s;
 }
 
@@ -404,7 +414,7 @@ body:has(.files-page) #root {
   background: rgba(232, 121, 249, 0.12);
   color: var(--pink);
   border-color: rgba(232, 121, 249, 0.3);
-  transform: scale(1.1);
+  transform: translateY(-50%) scale(1.1);
 }
 
 .empty-state {
