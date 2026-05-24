@@ -37,8 +37,9 @@ def _model() -> str:
 
 async def complete(messages: list[dict[str, str]]) -> str:
     """One-shot completion. Returns the full assistant message text."""
+    client = _client()
     try:
-        response = await _client().chat.completions.create(
+        response = await client.chat.completions.create(
             model=_model(),
             messages=messages,
             stream=False,
@@ -47,6 +48,8 @@ async def complete(messages: list[dict[str, str]]) -> str:
         raise LLMError(f"LLM unreachable: {exc}") from exc
     except APIError as exc:
         raise LLMError(f"LLM error: {exc}") from exc
+    finally:
+        await client.close()
 
     choice = response.choices[0].message.content if response.choices else None
     if not choice:
@@ -56,8 +59,9 @@ async def complete(messages: list[dict[str, str]]) -> str:
 
 async def stream(messages: list[dict[str, str]]) -> AsyncIterator[str]:
     """Token-by-token streaming. Yields content deltas as they arrive."""
+    client = _client()
     try:
-        response = await _client().chat.completions.create(
+        response = await client.chat.completions.create(
             model=_model(),
             messages=messages,
             stream=True,
@@ -72,3 +76,5 @@ async def stream(messages: list[dict[str, str]]) -> AsyncIterator[str]:
         raise LLMError(f"LLM unreachable: {exc}") from exc
     except APIError as exc:
         raise LLMError(f"LLM error: {exc}") from exc
+    finally:
+        await client.close()

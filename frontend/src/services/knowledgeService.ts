@@ -14,7 +14,7 @@ export const ERROR_MESSAGES_KB = {
 } as const
 
 export async function listKnowledgeFolders(): Promise<KnowledgeListResponse> {
-  const response = await fetch(`${getApiUrl()}${API_ROUTES.KNOWLEDGE}/`, {
+  const response = await fetch(`${getApiUrl()}${API_ROUTES.KNOWLEDGE}`, {
     headers: getHeaders(),
   })
   if (!response.ok) throw new Error(ERROR_MESSAGES_KB.FETCH_FOLDERS)

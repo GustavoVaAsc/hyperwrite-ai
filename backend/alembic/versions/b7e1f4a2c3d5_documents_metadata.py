@@ -20,8 +20,10 @@ depends_on: Union[str, Sequence[str], None] = None
 def upgrade() -> None:
     op.add_column(
         "documents",
-        sa.Column("owner_id", sa.Integer(), nullable=False),
+        sa.Column("owner_id", sa.Integer(), nullable=True),
     )
+    op.execute("DELETE FROM documents WHERE owner_id IS NULL")
+    op.alter_column("documents", "owner_id", nullable=False)
     op.create_foreign_key(
         "fk_documents_owner_id_users",
         "documents",

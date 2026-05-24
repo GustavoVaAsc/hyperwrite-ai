@@ -14,7 +14,7 @@ from auth.router import fastapi_users
 from db.database import get_async_session
 from db.models import KnowledgeFolder, KnowledgeFile, KnowledgeChunk, User
 
-from .embedding import get_embeddings
+from .embedding import get_embeddings, EmbeddingError
 from .extractor import extract_text
 from . import storage
 
@@ -48,6 +48,7 @@ class FileResponse(BaseModel):
 class FolderDetailResponse(BaseModel):
     id: uuid.UUID
     name: str
+    file_count: int
     files: list[FileResponse]
     created_at: datetime
     updated_at: datetime
@@ -149,6 +150,7 @@ async def get_folder(
     return FolderDetailResponse(
         id=folder.id,
         name=folder.name,
+        file_count=len(file_responses),
         files=file_responses,
         created_at=folder.created_at,
         updated_at=folder.updated_at,
@@ -184,6 +186,12 @@ async def upload_file(
 ) -> UploadResponse:
     folder = await get_folder_or_404(folder_id, user, session)
 
+    if not file.filename:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Filename is required",
+        )
+
     ext = file.filename.split(".")[-1] if "." in file.filename else ""
     if ext.lower() not in ALLOWED_EXTENSIONS:
         raise HTTPException(
@@ -215,7 +223,13 @@ async def upload_file(
             detail="No text could be extracted from file",
         )
 
-    embedding_vectors = await get_embeddings(chunks)
+    try:
+        embedding_vectors = await get_embeddings(chunks)
+    except EmbeddingError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=str(exc),
+        ) from exc
 
     knowledge_file = KnowledgeFile(
         folder_id=folder.id,
@@ -257,6 +271,16 @@ async def delete_folder(
     session: AsyncSession = Depends(get_async_session),
 ) -> None:
     folder = await get_folder_or_404(knowledge_id, user, session)
+
+    files_stmt = select(KnowledgeFile).where(KnowledgeFile.folder_id == folder.id)
+    files_result = await session.execute(files_stmt)
+    files = files_result.scalars().all()
+    for kf in files:
+        if kf.file_path:
+            path = storage.resolve_file_path(kf.file_path, user.id)
+            if path and path.exists():
+                path.unlink()
+
     await session.delete(folder)
     await session.commit()
 
