@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react'
+import styles from './App.module.css'
 
 function App() {
   const [message, setMessage] = useState<string>('Connecting...')
 
   useEffect(() => {
-    // Environment variable for the Backend
     const apiUrl = import.meta.env.VITE_API_URL
 
     fetch(`${apiUrl}/`)
@@ -14,9 +14,9 @@ function App() {
   }, [])
 
   return (
-    <div style={{ padding: '2rem', fontFamily: 'system-ui' }}>
-      <h1>Hyperwrite AI</h1>
-      <p>Backend status: <strong>{message}</strong></p>
+    <div className={styles.container}>
+      <h1 className={styles.title}>Hyperwrite AI</h1>
+      <p className={styles.status}>Backend status: <strong>{message}</strong></p>
     </div>
   )
 }

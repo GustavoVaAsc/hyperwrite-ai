@@ -1,21 +1,31 @@
 import { useEffect, useState } from 'react'
+import { getApiUrl } from '../services/api'
+import { API_ROUTES, ERROR_MESSAGES } from '../constants/app'
+import { useNotificationStore } from '../store/notificationStore'
+import styles from './Home.module.css'
 
 export function Home() {
-  const [message, setMessage] = useState<string>('Connecting...')
+  const [message, setMessage] = useState<string>(ERROR_MESSAGES.CONNECTING)
+  const addAlert = useNotificationStore((s) => s.addAlert)
 
   useEffect(() => {
-    const apiUrl = import.meta.env.VITE_API_URL
+    const apiUrl = getApiUrl()
 
-    fetch(`${apiUrl}/`)
-      .then(res => res.json())
+    fetch(`${apiUrl}${API_ROUTES.HOME}`)
+      .then(res => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        return res.json()
+      })
       .then(data => setMessage(data.message))
-      .catch(() => setMessage('Error: could not connect to backend'))
-  }, [])
+      .catch(() => {
+        addAlert('error', ERROR_MESSAGES.BACKEND_CONNECTION)
+      })
+  }, [addAlert])
 
   return (
-    <div style={{ padding: '2rem', fontFamily: 'system-ui' }}>
-      <h1>Hyperwrite AI</h1>
-      <p>Backend status: <strong>{message}</strong></p>
+    <div className={styles.container}>
+      <h1 className={styles.title}>Hyperwrite AI</h1>
+      <p className={styles.status}>Backend status: <strong>{message}</strong></p>
     </div>
   )
 }

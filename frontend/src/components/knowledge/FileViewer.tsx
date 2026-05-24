@@ -1,4 +1,5 @@
 import { type JSX, useState, useEffect } from 'react'
+import DOMPurify from 'dompurify'
 import { getFileRaw, downloadFile } from '../../services/knowledgeService'
 import type { KnowledgeFile } from '../../types/knowledge'
 
@@ -36,13 +37,11 @@ export function FileViewer({ file, onClose }: FileViewerProps): JSX.Element {
     }
   }
 
-  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (!file) return
     loadFile()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [file])
-  /* eslint-enable react-hooks/set-state-in-effect */
 
   useEffect(() => {
     return () => {
@@ -78,7 +77,7 @@ export function FileViewer({ file, onClose }: FileViewerProps): JSX.Element {
             />
           )}
           {!loading && !error && textContent && (
-            <pre className="file-content">{textContent}</pre>
+            <pre className="file-content">{DOMPurify.sanitize(textContent)}</pre>
           )}
         </div>
       </div>

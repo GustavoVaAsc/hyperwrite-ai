@@ -247,5 +247,5 @@ docs(api): update authentication docs
 
 - [ ] **Knowledge Base file operations** - Implement file copy, move, and other file management operations between folders in the RAG Knowledge Base
 - [ ] **User documents folder management** - Add folder organization capabilities (create, rename, delete folders) for user documents in the Files section
-- [ ] **Knowledge base components refactor** - Review and refactor Knowledge Base components and stylesheets for better maintainability and consistency
-- [ ] **Modular deletion confirmation modal** - Create a reusable confirmation modal component for deletions that can be used for both file and folder deletion, replacing the current inline confirmations
+- [x] **Knowledge base components refactor** - Review and refactor Knowledge Base components and stylesheets for better maintainability and consistency
+- [x] **Modular deletion confirmation modal** - Create a reusable confirmation modal component for deletions that can be used for both file and folder deletion, replacing the current inline confirmations

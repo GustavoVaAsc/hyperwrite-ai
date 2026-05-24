@@ -1,5 +1,6 @@
 import { type JSX, useState } from 'react'
 import type { KnowledgeFile } from '../../types/knowledge'
+import { formatDate } from '../../utils/formatDate'
 
 interface FileItemProps {
   file: KnowledgeFile
@@ -34,14 +35,6 @@ export function FileItem({ file, onView, onDelete }: FileItemProps): JSX.Element
   const [isHovered, setIsHovered] = useState(false)
 
   const icon = FILE_ICONS[file.file_type] || FILE_ICONS.text
-
-  const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    })
-  }
 
   const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation()

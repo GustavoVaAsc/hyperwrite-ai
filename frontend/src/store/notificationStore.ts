@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { TIMING } from '../constants/app'
 
 export type AlertType = 'success' | 'warning' | 'error'
 
@@ -14,7 +15,7 @@ interface NotificationStore {
   removeAlert: (id: string) => void
 }
 
-export const useNotificationStore = create<NotificationStore>((set) => ({
+export const useNotificationStore = create<NotificationStore>((set, get) => ({
   alerts: [],
   addAlert: (type, message) => {
     const id = crypto.randomUUID()
@@ -22,10 +23,13 @@ export const useNotificationStore = create<NotificationStore>((set) => ({
       alerts: [...state.alerts, { id, type, message }],
     }))
     setTimeout(() => {
-      set((state) => ({
-        alerts: state.alerts.filter((a) => a.id !== id),
-      }))
-    }, 10000)
+      const { alerts } = get()
+      if (alerts.some((a) => a.id === id)) {
+        set((state) => ({
+          alerts: state.alerts.filter((a) => a.id !== id),
+        }))
+      }
+    }, TIMING.NOTIFICATION_DURATION_MS)
   },
   removeAlert: (id) =>
     set((state) => ({
