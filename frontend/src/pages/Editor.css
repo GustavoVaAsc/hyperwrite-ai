@@ -233,17 +233,74 @@ body:has(.editor-page) #root {
   color: #000000 !important;
 }
 
-/* ── Images Inside Editor ──────────────────────────── */
-:root body .editor-page .tiptap-editor-content .ProseMirror img {
-  max-width: 100%;
-  height: auto;
+/* ── Resizable Images ──────────────────────────────── */
+:root body .editor-page .tiptap-editor-content .ProseMirror .resizable-image-wrapper {
   display: block;
   margin: 12px 0;
+}
+
+.resizable-image-container {
+  position: relative;
+  display: inline-block;
+  max-width: 100%;
+}
+
+.resizable-image-container img {
+  display: block;
+  max-width: 100%;
+  height: auto;
   border-radius: 4px;
 }
-:root body .editor-page .tiptap-editor-content .ProseMirror img.ProseMirror-selectednode {
+
+.resizable-image-container.selected {
   outline: 2px solid #7C3AED;
   outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.resizable-image-container.resizing {
+  user-select: none;
+}
+
+.resize-handle {
+  position: absolute;
+  top: 0;
+  width: 8px;
+  height: 100%;
+  cursor: col-resize;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.resizable-image-container:hover .resize-handle,
+.resizable-image-container.selected .resize-handle {
+  opacity: 1;
+}
+
+.resize-handle::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 4px;
+  height: 40px;
+  max-height: 60%;
+  background: #7C3AED;
+  border-radius: 2px;
+}
+
+.resize-handle-right {
+  right: -4px;
+}
+.resize-handle-right::after {
+  right: 2px;
+}
+
+.resize-handle-left {
+  left: -4px;
+}
+.resize-handle-left::after {
+  left: 2px;
 }
 
 /* ── Find & Replace Bar ────────────────────────────── */
@@ -331,4 +388,56 @@ body:has(.editor-page) #root {
   font-size: 12px;
   color: var(--text-muted);
   flex-shrink: 0;
+}
+
+/* ── Print / Export PDF ────────────────────────────── */
+@media print {
+  body * {
+    visibility: hidden !important;
+  }
+
+  .editor-page .tiptap-editor-content,
+  .editor-page .tiptap-editor-content * {
+    visibility: visible !important;
+  }
+
+  .editor-page .tiptap-editor-content {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    max-width: none !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    overflow: visible !important;
+  }
+
+  .editor-page .tiptap-editor-content .ProseMirror {
+    padding: 0 !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  .editor-page .editor-header,
+  .editor-page .editor-toolbar,
+  .editor-page .editor-status-bar,
+  .editor-page .editor-chat-panel,
+  .editor-page .find-replace-bar,
+  .editor-page .editor-grid-bg,
+  .editor-page .glow {
+    display: none !important;
+  }
+
+  @page {
+    margin: 1in;
+    size: letter;
+    margin-top: 0.75in;
+    margin-bottom: 0.75in;
+  }
+
+  @page :first {
+    margin-top: 1in;
+  }
 }
