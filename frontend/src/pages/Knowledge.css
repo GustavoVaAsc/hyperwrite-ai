@@ -1,0 +1,195 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@700;800&display=swap');
+
+:root {
+  --bg-deep:      #0A0118;
+  --bg-card:      #1F1235;
+  --purple:       #7C3AED;
+  --purple-hover: #8B47FF;
+  --cyan:         #06B6D4;
+  --pink:         #E879F9;
+  --text-primary: #F1F0FF;
+  --text-muted:   #9B8FBE;
+  --border-sub:   rgba(124, 58, 237, 0.25);
+  --font-display: 'Syne', 'Segoe UI', sans-serif;
+  --font-mono:    'DM Mono', 'Courier New', monospace;
+}
+
+body:has(.knowledge-page) {
+  background-color: var(--bg-deep) !important;
+}
+
+body:has(.knowledge-page) #root {
+  width: 100%;
+  max-width: 100%;
+  border: none;
+}
+
+body:has(.knowledge-page) .nav {
+  background: rgba(10, 1, 24, 0.5) !important;
+  border-bottom: 1px solid var(--border-sub) !important;
+  max-width: 100%;
+}
+
+body:has(.knowledge-page) .nav a,
+body:has(.knowledge-page) .nav-brand a {
+  color: var(--text-primary) !important;
+  font-family: var(--font-display);
+}
+
+body:has(.knowledge-page) .nav a:hover {
+  color: var(--pink) !important;
+}
+
+body:has(.knowledge-page) .nav-user {
+  color: var(--cyan) !important;
+  font-family: var(--font-mono);
+}
+
+body:has(.knowledge-page) .nav-logout {
+  background: rgba(232, 121, 249, 0.1) !important;
+  color: var(--pink) !important;
+  border: 1px solid rgba(232, 121, 249, 0.3) !important;
+  padding: 6px 14px !important;
+  border-radius: 6px !important;
+  cursor: pointer !important;
+  font-family: var(--font-mono);
+  transition: background 0.2s !important;
+}
+
+body:has(.knowledge-page) .nav-logout:hover {
+  background: rgba(232, 121, 249, 0.25) !important;
+  color: white !important;
+}
+
+/* ── Layout de Knowledge ────────────────────────────── */
+.knowledge-page {
+  min-height: calc(100vh - 64px);
+  position: relative;
+  overflow-x: hidden;
+  padding: 100px 20px 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-family: var(--font-display);
+}
+
+.knowledge-grid-bg {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    linear-gradient(rgba(124, 58, 237, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(124, 58, 237, 0.06) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+/* ── Glow Orbs ──────────────────────────────────────── */
+.glow {
+  position: fixed;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+  filter: blur(80px);
+}
+.glow-purple { width: 400px; height: 400px; top: -100px; right: -80px; background: rgba(124, 58, 237, 0.18); }
+.glow-cyan { width: 300px; height: 300px; bottom: -60px; left: -60px; background: rgba(6, 182, 212, 0.14); }
+.glow-pink { width: 200px; height: 200px; top: 40%; left: 30%; background: rgba(232, 121, 249, 0.08); }
+
+/* ── Contenido Principal ────────────────────────────── */
+.knowledge-content {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 600px;
+  animation: fadeUp 0.45s ease both;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 4vh;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.knowledge-title {
+  font-size: 36px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--text-primary);
+  margin: 0 0 10px;
+  text-align: center;
+}
+
+.knowledge-description {
+  font-size: 15px;
+  color: var(--text-muted);
+  margin-bottom: 40px;
+  text-align: center;
+}
+
+/* ── Tarjeta "Coming Soon" ──────────────────────────── */
+.knowledge-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-sub);
+  border-radius: 16px;
+  padding: 40px;
+  text-align: center;
+  box-shadow: 0 8px 30px rgba(124, 58, 237, 0.15);
+  width: 100%;
+}
+
+.placeholder-icon {
+  font-size: 48px;
+  margin-bottom: 20px;
+  display: inline-block;
+  padding: 20px;
+  background: rgba(124, 58, 237, 0.1);
+  border-radius: 50%;
+  border: 1px solid var(--border-sub);
+  box-shadow: 0 0 20px rgba(124, 58, 237, 0.2);
+}
+
+.knowledge-card h2 {
+  color: var(--text-primary);
+  font-size: 24px;
+  margin-bottom: 16px;
+}
+
+.knowledge-card p {
+  color: var(--text-muted);
+  line-height: 1.6;
+  margin-bottom: 32px;
+}
+
+.feature-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  text-align: left;
+  width: fit-content;
+}
+
+.feature-list li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  background: rgba(10, 1, 24, 0.4);
+  padding: 12px 20px;
+  border-radius: 8px;
+  border: 1px solid rgba(124, 58, 237, 0.15);
+  transition: transform 0.2s, border-color 0.2s;
+}
+
+.feature-list li:hover {
+  transform: translateX(4px);
+  border-color: var(--purple);
+}
