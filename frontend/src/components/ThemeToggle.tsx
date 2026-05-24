@@ -1,5 +1,6 @@
 import { useThemeStore } from '../store/themeStore'
 import '../theme.css'
+import styles from './ThemeToggle.module.css'
 
 export function ThemeToggle() {
   const theme = useThemeStore((state) => state.theme)
@@ -9,9 +10,8 @@ export function ThemeToggle() {
     <button
       type="button"
       onClick={toggleTheme}
-      className="btn-theme-toggle"
+      className={`btn-theme-toggle ${styles.toggle}`}
       title={`Cambiar a modo ${theme === 'light' ? 'oscuro' : 'claro'}`}
-      style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '1.2rem' }}
     >
       {theme === 'light' ? '🌙' : '☀️'}
     </button>

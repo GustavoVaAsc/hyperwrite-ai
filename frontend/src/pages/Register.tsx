@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { useAuthStore } from '../store/authStore'
+import { getApiUrl } from '../services/api'
+import { API_ROUTES } from '../constants/app'
 import './Register.css'
 
 function IconMail() {
@@ -75,8 +77,8 @@ export function Register() {
     setIsLoading(true)
 
     try {
-      const apiUrl = import.meta.env.VITE_API_URL
-      const response = await fetch(`${apiUrl}/auth/register`, {
+      const apiUrl = getApiUrl()
+      const response = await fetch(`${apiUrl}${API_ROUTES.AUTH_REGISTER}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -94,7 +96,7 @@ export function Register() {
         throw new Error(data.detail || 'Registration failed')
       }
 
-      const loginResponse = await fetch(`${apiUrl}/auth/login`, {
+      const loginResponse = await fetch(`${apiUrl}${API_ROUTES.AUTH_LOGIN}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
@@ -111,7 +113,7 @@ export function Register() {
 
       const data = await loginResponse.json()
 
-      const userResponse = await fetch(`${apiUrl}/users/me`, {
+      const userResponse = await fetch(`${apiUrl}${API_ROUTES.USERS_ME}`, {
         headers: {
           Authorization: `Bearer ${data.access_token}`,
         },

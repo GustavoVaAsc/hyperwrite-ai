@@ -1,7 +1,11 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { useAuthStore } from '../store/authStore'
 import { listDocuments, createDocument, deleteDocument } from '../services/documentService'
+import { useNotificationStore } from '../store/notificationStore'
+import { ConfirmModal } from '../components/modals/ConfirmModal'
+import { formatDate } from '../utils/formatDate'
+import { UI_COPY, ERROR_MESSAGES } from '../constants/app'
 import type { DocumentSummary } from '../types/document'
 import './Files.css'
 
@@ -56,60 +60,63 @@ function IconSearch() {
   )
 }
 
-function formatDate(dateStr: string) {
-  return new Date(dateStr).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
-}
-
 export function Files() {
   const navigate = useNavigate()
   const { user, logout } = useAuthStore()
+  const addAlert = useNotificationStore((s) => s.addAlert)
   const [documents, setDocuments] = useState<DocumentSummary[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
+  const [deleteConfirm, setDeleteConfirm] = useState<{ show: boolean; doc: DocumentSummary | null }>({ show: false, doc: null })
 
-  const loadDocuments = async () => {
+  const loadDocuments = useCallback(async () => {
     setIsLoading(true)
     setError('')
     try {
       const docs = await listDocuments()
       setDocuments(docs)
     } catch {
-      setError('Failed to load documents')
+      setError(ERROR_MESSAGES.FAILED_TO_LOAD_DOCUMENTS)
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [])
 
   useEffect(() => {
     loadDocuments()
-  }, [])
+  }, [loadDocuments])
 
   const handleCreateDocument = async () => {
     try {
-      const newDoc = await createDocument({ title: 'Untitled' })
+      const newDoc = await createDocument({ title: UI_COPY.UNTITLED })
       navigate({ to: '/editor/$docId', params: { docId: newDoc.id } })
     } catch {
-      setError('Failed to create document')
+      setError(ERROR_MESSAGES.FAILED_TO_CREATE_DOCUMENT)
     }
   }
 
   const handleDeleteDocument = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation()
     e.preventDefault()
-    if (!confirm('Are you sure you want to delete this document?')) return
+    const doc = documents.find((d) => d.id === id) || null
+    setDeleteConfirm({ show: true, doc })
+  }
+
+  const handleConfirmDelete = async () => {
+    if (!deleteConfirm.doc) return
     try {
-      await deleteDocument(id)
-      setDocuments((prev) => prev.filter((d) => d.id !== id))
+      await deleteDocument(deleteConfirm.doc.id)
+      setDocuments((prev) => prev.filter((d) => d.id !== deleteConfirm.doc!.id))
     } catch {
-      setError('Failed to delete document')
+      addAlert('error', ERROR_MESSAGES.DELETE_DOCUMENT)
+    } finally {
+      setDeleteConfirm({ show: false, doc: null })
     }
+  }
+
+  const handleCancelDelete = () => {
+    setDeleteConfirm({ show: false, doc: null })
   }
 
   const handleLogout = () => {
@@ -120,7 +127,7 @@ export function Files() {
   const filteredDocuments = documents.filter((doc) => {
     const query = searchQuery.toLowerCase()
     return (
-      (doc.title || 'Untitled').toLowerCase().startsWith(query) ||
+      (doc.title || UI_COPY.UNTITLED).toLowerCase().startsWith(query) ||
       (doc.excerpt || '').toLowerCase().startsWith(query)
     )
   })
@@ -226,7 +233,7 @@ export function Files() {
                     </div>
                     <div className="file-info">
                       <span className="file-title">{doc.title || 'Untitled'}</span>
-                      <span className="file-date">{formatDate(doc.updated_at)}</span>
+                      <span className="file-date">{formatDate(doc.updated_at, true)}</span>
                     </div>
                   </a>
                   <button
@@ -243,6 +250,15 @@ export function Files() {
           )}
         </div>
       </main>
+
+      {deleteConfirm.show && deleteConfirm.doc && (
+        <ConfirmModal
+          title="Delete Document"
+          message={`Are you sure you want to delete "${deleteConfirm.doc.title || UI_COPY.UNTITLED}"? ${UI_COPY.DELETE_CONFIRM_SUFFIX}`}
+          onConfirm={handleConfirmDelete}
+          onCancel={handleCancelDelete}
+        />
+      )}
     </div>
   )
 }

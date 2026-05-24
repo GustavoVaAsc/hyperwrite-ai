@@ -1,5 +1,6 @@
 import { type JSX, useState, useRef, useCallback } from 'react'
 import type { KnowledgeFolder } from '../../types/knowledge'
+import styles from './UploadModal.module.css'
 
 interface UploadModalProps {
   folder: KnowledgeFolder | null
@@ -53,18 +54,18 @@ export function UploadModal({ folder, onUpload, onClose }: UploadModalProps): JS
     handleFiles(e.dataTransfer.files)
   }, [handleFiles])
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     handleFiles(e.target.files)
     if (fileInputRef.current) fileInputRef.current.value = ''
-  }
+  }, [handleFiles])
 
-  const handleBrowseClick = () => {
+  const handleBrowseClick = useCallback(() => {
     fileInputRef.current?.click()
-  }
+  }, [])
 
-  const handleBackdropClick = (e: React.MouseEvent) => {
+  const handleBackdropClick = useCallback((e: React.MouseEvent) => {
     if (e.target === e.currentTarget && !isUploading) onClose()
-  }
+  }, [isUploading, onClose])
 
   if (!folder) return null
 
@@ -124,7 +125,7 @@ export function UploadModal({ folder, onUpload, onClose }: UploadModalProps): JS
           accept=".pdf,.txt,.md,.text"
           multiple
           onChange={handleFileSelect}
-          style={{ display: 'none' }}
+          className={styles.hiddenInput}
         />
       </div>
     </div>

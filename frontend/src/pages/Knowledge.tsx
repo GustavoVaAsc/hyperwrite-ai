@@ -1,11 +1,13 @@
-import { type JSX, useState, useEffect } from 'react'
+import { type JSX, useState, useEffect, useCallback } from 'react'
 import { useKnowledge } from '../hooks/useKnowledge'
 import { FolderItem } from '../components/knowledge/FolderItem'
 import { FileItem } from '../components/knowledge/FileItem'
 import { FileViewer } from '../components/knowledge/FileViewer'
 import { UploadModal } from '../components/knowledge/UploadModal'
 import { ConfirmModal } from '../components/modals/ConfirmModal'
+import { FolderEmptyIcon, FileEmptyIcon } from '../components/knowledge/EmptyIcons'
 import { useNotificationStore } from '../store/notificationStore'
+import { ERROR_MESSAGES, UI_COPY } from '../constants/app'
 import type { KnowledgeFolder, KnowledgeFile } from '../types/knowledge'
 import { deleteFolder } from '../services/knowledgeService'
 
@@ -36,9 +38,9 @@ export function Knowledge(): JSX.Element {
     loadFolders()
   }, [loadFolders])
 
-  const handleFolderSelect = (folder: KnowledgeFolder) => {
+  const handleFolderSelect = useCallback((folder: KnowledgeFolder) => {
     loadFolderDetail(folder.id)
-  }
+  }, [loadFolderDetail])
 
   const handleDeleteFolder = async (folderId: string) => {
     const originalFolders = folders
@@ -47,20 +49,20 @@ export function Knowledge(): JSX.Element {
       await deleteFolder(folderId)
     } catch {
       setFolders(originalFolders)
-      addAlert('error', 'Failed to delete folder')
+      addAlert('error', ERROR_MESSAGES.DELETE_FOLDER)
     }
   }
 
-  const handleDeleteFileClick = (file: KnowledgeFile) => {
+  const handleDeleteFileClick = useCallback((file: KnowledgeFile) => {
     setDeleteConfirm({ show: true, file })
-  }
+  }, [])
 
   const handleConfirmDelete = async () => {
     if (!deleteConfirm.file || !currentFolder) return
     try {
       await removeFile(currentFolder.id, deleteConfirm.file.id)
     } catch {
-      alert('Failed to delete file')
+      addAlert('error', ERROR_MESSAGES.DELETE_FILE)
     } finally {
       setDeleteConfirm({ show: false, file: null })
     }
@@ -77,34 +79,34 @@ export function Knowledge(): JSX.Element {
       setShowNewFolderModal(false)
       setNewFolderName('')
     } catch {
-      alert('Failed to create folder')
+      addAlert('error', ERROR_MESSAGES.CREATE_FOLDER)
     }
   }
 
-  const handleUploadClick = (folder: KnowledgeFolder) => {
+  const handleUploadClick = useCallback((folder: KnowledgeFolder) => {
     setUploadTargetFolder(folder)
-  }
+  }, [])
 
-  const handleUploadClose = () => {
+  const handleUploadClose = useCallback(() => {
     setUploadTargetFolder(null)
-  }
+  }, [])
 
   const handleFilesUpload = async (folderId: string, files: File[]) => {
     for (const file of files) {
       try {
         await uploadFileToFolder(folderId, file)
       } catch {
-        alert(`Failed to upload ${file.name}`)
+        addAlert('error', `${ERROR_MESSAGES.UPLOAD_FILE}: ${file.name}`)
       }
     }
   }
 
-  const handleBackdropClick = (e: React.MouseEvent) => {
+  const handleBackdropClick = useCallback((e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {
       setShowNewFolderModal(false)
       setSelectedFile(null)
     }
-  }
+  }, [])
 
   return (
     <div className="page-container knowledge-page">
@@ -115,7 +117,7 @@ export function Knowledge(): JSX.Element {
               <svg viewBox="0 0 24 24" fill="currentColor">
                 <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z" />
               </svg>
-              <span>Back to Folders</span>
+              <span>{UI_COPY.BACK_TO_FOLDERS}</span>
             </button>
           ) : (
             <h1>Knowledge Base</h1>
@@ -125,7 +127,7 @@ export function Knowledge(): JSX.Element {
           {currentFolder && (
             <button
               className="new-folder-btn"
-              onClick={() => setUploadTargetFolder(currentFolder)}
+              onClick={() => handleUploadClick(currentFolder)}
             >
               <svg viewBox="0 0 24 24" fill="currentColor">
                 <path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z" />
@@ -153,7 +155,7 @@ export function Knowledge(): JSX.Element {
 
         {!loading && !error && !currentFolder && folders.length === 0 && (
           <div className="empty-state">
-            <div className="empty-icon">📁</div>
+            <FolderEmptyIcon className="empty-icon" />
             <h3>No folders yet</h3>
             <p>Create a folder to start organizing your knowledge base</p>
           </div>
@@ -178,7 +180,7 @@ export function Knowledge(): JSX.Element {
           <div className="file-list">
             {currentFolder.files.length === 0 ? (
               <div className="empty-state">
-                <div className="empty-icon">📄</div>
+                <FileEmptyIcon className="empty-icon" />
                 <h3>No files in this folder</h3>
                 <p>Click upload to add files</p>
               </div>
@@ -197,7 +199,7 @@ export function Knowledge(): JSX.Element {
       </div>
 
       {uploadLoading && (
-        <div className="upload-indicator">Uploading...</div>
+        <div className="upload-indicator">{UI_COPY.UPLOADING}</div>
       )}
 
       {showNewFolderModal && (

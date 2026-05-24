@@ -5,8 +5,10 @@ import StarterKit from '@tiptap/starter-kit'
 import TextAlign from '@tiptap/extension-text-align'
 import Underline from '@tiptap/extension-underline'
 import { getDocument, updateDocument } from '../services/documentService'
+import { ERROR_MESSAGES } from '../constants/app'
 import type { DocumentRead } from '../types/document'
 import { ThemeToggle } from '../components/ThemeToggle'
+import styles from './Editor.module.css'
 
 function ToolbarButton({
   onClick,
@@ -56,8 +58,7 @@ export function Editor() {
     content: '',
     editorProps: {
       attributes: {
-        class: 'tiptap-editor-content',
-        style: 'padding: 2rem; max-width: 800px; margin: 0 auto; outline: none; min-height: 100%;',
+        class: `tiptap-editor-content ${styles.tiptapEditor}`,
       },
     },
   })
@@ -70,7 +71,7 @@ export function Editor() {
         const updated = await updateDocument(docId, { content_json: content })
         setDocument(updated)
       } catch {
-        setError('Failed to save')
+        setError(ERROR_MESSAGES.FAILED_TO_SAVE)
       } finally {
         setIsSaving(false)
       }
@@ -80,16 +81,12 @@ export function Editor() {
 
   useEffect(() => {
     if (!docId) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setError('No document selected')
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setError(ERROR_MESSAGES.NO_DOCUMENT_SELECTED)
       setIsLoading(false)
       return
     }
 
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsLoading(true)
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setError('')
 
     let isMounted = true
@@ -97,20 +94,17 @@ export function Editor() {
     getDocument(docId)
       .then((doc) => {
         if (isMounted) {
-          // eslint-disable-next-line react-hooks/set-state-in-effect
           setDocument(doc)
           editor?.commands.setContent(doc.content_json || { type: 'doc', content: [] })
         }
       })
       .catch(() => {
         if (isMounted) {
-          // eslint-disable-next-line react-hooks/set-state-in-effect
-          setError('Failed to load document')
+          setError(ERROR_MESSAGES.FAILED_TO_LOAD_DOCUMENT)
         }
       })
       .finally(() => {
         if (isMounted) {
-          // eslint-disable-next-line react-hooks/set-state-in-effect
           setIsLoading(false)
         }
       })
@@ -126,7 +120,7 @@ export function Editor() {
       const updated = await updateDocument(docId, { title })
       setDocument(updated)
     } catch {
-      setError('Failed to update title')
+      setError(ERROR_MESSAGES.FAILED_TO_UPDATE_TITLE)
     }
   }
 
@@ -191,7 +185,7 @@ export function Editor() {
   }
 
   return (
-    <div className="editor-fullscreen" style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 64px)', overflow: 'hidden' }}>
+    <div className="editor-fullscreen">
       <header className="editor-header">
         <button onClick={() => navigate({ to: '/files' })} className="btn-back">
           ← Files
@@ -312,7 +306,7 @@ export function Editor() {
           </ToolbarButton>
         </div>
       )}
-      <main className="editor-content-area" style={{ flex: 1, overflowY: 'auto' }}>
+      <main className="editor-content-area">
         <EditorContent editor={editor} />
       </main>
     </div>
