@@ -298,7 +298,13 @@ async def ws_chat(
                     continue
 
                 conversation = await service.get_conversation_by_id(conversation_id, user_id)
+                if not conversation:
+                    await websocket.send_json({"type": "error", "detail": "Conversation not found"})
+                    continue
                 agent = await service.get_agent_by_id(conversation.agent_id)
+                if not agent:
+                    await websocket.send_json({"type": "error", "detail": "Agent not found"})
+                    continue
                 agent_schema = _agent_to_schema(agent)
 
                 messages_history = await service.get_messages_for_conversation(conversation_id, user_id)

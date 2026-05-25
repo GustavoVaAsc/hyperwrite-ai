@@ -83,7 +83,9 @@ class InsertTextTool(BaseTool):
                 else:
                     content["content"].append(paragraph)
 
+                from sqlalchemy.orm.attributes import flag_modified
                 document.content_json = content
+                flag_modified(document, "content_json")
                 await session.commit()
 
                 return f"Successfully inserted text at the {position} of the document. The document now has {len(content['content'])} blocks."
