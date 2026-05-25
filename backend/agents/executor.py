@@ -1,13 +1,25 @@
 from __future__ import annotations
 
 import json
+import uuid
 from collections.abc import AsyncIterator
+from dataclasses import dataclass
+from typing import Any
+
+from sqlalchemy import select
 
 from . import llm
 from .schemas import AgentSchema
 
-
 MAX_TOOL_ITERATIONS = 10
+
+DOCUMENT_MODIFYING_TOOLS = ("insert_text", "replace_content")
+
+
+@dataclass
+class DocumentModifiedEvent:
+    document_id: str
+    content_json: dict[str, Any]
 
 
 class AgentExecutor:
@@ -16,10 +28,23 @@ class AgentExecutor:
         self.user_id = user_id
         self.document_id = document_id
 
+    async def _fetch_document_content(self) -> dict[str, Any] | None:
+        if not self.document_id:
+            return None
+        from db.database import AsyncSessionLocal
+        from db.models import Document
+        async with AsyncSessionLocal() as session:
+            result = await session.execute(
+                select(Document.content_json).where(
+                    Document.uuid == uuid.UUID(self.document_id)
+                )
+            )
+            return result.scalar_one_or_none()
+
     async def execute(
         self,
         messages: list[dict[str, str]],
-    ) -> AsyncIterator[str]:
+    ) -> AsyncIterator[str | DocumentModifiedEvent]:
         full_response = ""
         iterations = 0
 
@@ -53,7 +78,7 @@ class AgentExecutor:
                 except json.JSONDecodeError:
                     tool_args = {}
 
-                if tool_name == "insert_text" and self.document_id:
+                if tool_name in DOCUMENT_MODIFYING_TOOLS and self.document_id:
                     tool_args["document_id"] = self.document_id
 
                 tool = get_tool(tool_name)
@@ -66,9 +91,7 @@ class AgentExecutor:
                     continue
 
                 try:
-                    if tool_name == "rag_lookup":
-                        result = await tool.execute(user_id=self.user_id, **tool_args)
-                    elif tool_name == "insert_text":
+                    if tool_name in ("rag_lookup", *DOCUMENT_MODIFYING_TOOLS):
                         result = await tool.execute(user_id=self.user_id, **tool_args)
                     else:
                         result = await tool.execute(**tool_args)
@@ -81,11 +104,20 @@ class AgentExecutor:
                     "content": result,
                 })
 
+                if tool_name in DOCUMENT_MODIFYING_TOOLS and "Error" not in result:
+                    updated_content = await self._fetch_document_content()
+                    if updated_content is not None:
+                        yield DocumentModifiedEvent(
+                            document_id=self.document_id,
+                            content_json=updated_content,
+                        )
+
         if iterations >= MAX_TOOL_ITERATIONS:
             yield "\n\n[Stopped: maximum tool call iterations reached]"
 
     async def execute_simple(self, messages: list[dict[str, str]]) -> str:
         full_response = ""
         async for delta in self.execute(messages):
-            full_response += delta
+            if isinstance(delta, str):
+                full_response += delta
         return full_response

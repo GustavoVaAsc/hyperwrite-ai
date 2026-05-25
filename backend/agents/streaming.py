@@ -41,7 +41,7 @@ from db.database import AsyncSessionLocal
 from db.models import Document, User
 
 from . import llm
-from .executor import AgentExecutor
+from .executor import AgentExecutor, DocumentModifiedEvent
 from .prompts import TOOL_SYSTEM_PROMPT
 from .schemas import AgentSchema, CapabilitySchema
 from . import service
@@ -174,8 +174,14 @@ async def _handle_action(
     try:
         executor = AgentExecutor(agent_schema, user_id or 0)
         async for delta in executor.execute(messages):
-            full_response += delta
-            await websocket.send_json({"type": "token", "text": delta})
+            if isinstance(delta, DocumentModifiedEvent):
+                await websocket.send_json({
+                    "type": "document_updated",
+                    "content": delta.content_json,
+                })
+            else:
+                full_response += delta
+                await websocket.send_json({"type": "token", "text": delta})
     except llm.LLMError as exc:
         await websocket.send_json({"type": "error", "detail": str(exc)})
         return
@@ -335,8 +341,14 @@ async def ws_chat(
                 try:
                     executor = AgentExecutor(agent_schema, user_id, doc_id_str)
                     async for delta in executor.execute(messages_for_llm):
-                        full_response += delta
-                        await websocket.send_json({"type": "token", "text": delta})
+                        if isinstance(delta, DocumentModifiedEvent):
+                            await websocket.send_json({
+                                "type": "document_updated",
+                                "content": delta.content_json,
+                            })
+                        else:
+                            full_response += delta
+                            await websocket.send_json({"type": "token", "text": delta})
                 except llm.LLMError as exc:
                     await websocket.send_json({"type": "error", "detail": str(exc)})
                     return
