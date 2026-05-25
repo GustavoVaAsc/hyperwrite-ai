@@ -3,11 +3,18 @@ import { useAuthStore } from '../../store/authStore'
 import { getApiUrl, getHeaders } from '../../services/api'
 import './EditorChatPanel.css'
 
+interface Skill {
+  id: string
+  name: string
+  description: string
+}
+
 interface Agent {
   id: string
   agent_id: string
   name: string
   description: string
+  skills?: Skill[]
 }
 
 interface Message {
@@ -326,7 +333,20 @@ export function EditorChatPanel({ docId, onDocumentUpdated }: EditorChatPanelPro
         </button>
       </header>
 
-      {selectedAgent && <p className="agent-description">{selectedAgent.description}</p>}
+      {selectedAgent && (
+        <div className="agent-info">
+          <p className="agent-description">{selectedAgent.description}</p>
+          {selectedAgent.skills && selectedAgent.skills.length > 0 && (
+            <div className="agent-skills-tags">
+              {selectedAgent.skills.map((skill) => (
+                <span key={skill.id} className="skill-tag" title={skill.description}>
+                  {skill.name}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="chat-panel-messages">
         {messages.filter((m) => m.role !== 'system').map((m) => {
