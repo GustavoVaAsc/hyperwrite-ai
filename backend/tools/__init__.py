@@ -4,6 +4,9 @@ from .rag_lookup import RAGLookupTool
 from .web_search import WebSearchTool
 from .insert_text import InsertTextTool
 from .replace_content import ReplaceContentTool
+from .insert_formula import InsertFormulaTool
+from .insert_table import InsertTableTool
+from .format_text import FormatTextTool
 from .base import BaseTool
 
 TOOLS: dict[str, BaseTool] = {
@@ -11,6 +14,9 @@ TOOLS: dict[str, BaseTool] = {
     "web_search": WebSearchTool(),
     "insert_text": InsertTextTool(),
     "replace_content": ReplaceContentTool(),
+    "insert_formula": InsertFormulaTool(),
+    "insert_table": InsertTableTool(),
+    "format_text": FormatTextTool(),
 }
 
 

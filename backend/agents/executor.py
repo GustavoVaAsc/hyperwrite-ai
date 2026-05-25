@@ -13,7 +13,7 @@ from .schemas import AgentSchema
 
 MAX_TOOL_ITERATIONS = 10
 
-DOCUMENT_MODIFYING_TOOLS = ("insert_text", "replace_content")
+DOCUMENT_MODIFYING_TOOLS = ("insert_text", "replace_content", "insert_formula", "insert_table", "format_text")
 
 
 @dataclass
