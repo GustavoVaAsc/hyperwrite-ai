@@ -215,6 +215,11 @@ class Agent(Base):
         secondary="agent_knowledge_folders",
         lazy="selectin",
     )
+    skills: Mapped[list["AgentSkill"]] = relationship(
+        "AgentSkill",
+        secondary="agent_skill_assignments",
+        lazy="selectin",
+    )
 
 
 class AgentCapability(Base):
@@ -256,6 +261,49 @@ class AgentKnowledgeFolder(Base):
     )
     folder_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("knowledge_folders.id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+
+
+class AgentSkill(Base):
+    __tablename__ = "agent_skills"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        Uuid(as_uuid=True),
+        primary_key=True,
+        default=uuid.uuid4,
+    )
+    owner_id: Mapped[int | None] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"),
+        index=True,
+        nullable=True,
+    )
+    name: Mapped[str] = mapped_column(String(100), nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False)
+    content: Mapped[str] = mapped_column(Text, nullable=False)
+    is_builtin: Mapped[bool] = mapped_column(default=False, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        nullable=False,
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
+        nullable=False,
+    )
+
+
+class AgentSkillAssignment(Base):
+    __tablename__ = "agent_skill_assignments"
+
+    agent_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("agents.id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+    skill_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("agent_skills.id", ondelete="CASCADE"),
         primary_key=True,
     )
 
