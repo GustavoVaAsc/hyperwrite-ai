@@ -20,9 +20,12 @@ from .schemas import (
     ConversationSchema,
     CreateAgentRequest,
     CreateConversationRequest,
+    CreateSkillRequest,
     MessageSchema,
+    SkillSchema,
     ToolSchema,
     UpdateAgentRequest,
+    UpdateSkillRequest,
 )
 from tools import get_all_tool_schemas
 from . import service
@@ -90,6 +93,7 @@ async def create_agent(
         system_prompt=payload.system_prompt,
         capability_ids=payload.capability_ids,
         linked_folder_ids=payload.linked_folder_ids,
+        skill_ids=payload.skill_ids,
     )
     return _agent_to_schema(agent)
 
@@ -121,6 +125,7 @@ async def update_agent(
         system_prompt=payload.system_prompt,
         capability_ids=payload.capability_ids,
         linked_folder_ids=payload.linked_folder_ids,
+        skill_ids=payload.skill_ids,
     )
     if agent is None:
         raise HTTPException(
@@ -315,6 +320,95 @@ async def get_conversation_messages(
     return [_message_to_schema(m) for m in messages]
 
 
+@router.get("/skills", response_model=list[SkillSchema])
+async def list_skills(
+    user: User = Depends(current_active_user),
+) -> list[SkillSchema]:
+    skills = await service.get_skills_for_user(user.id)
+    return [SkillSchema.model_validate(s) for s in skills]
+
+
+@router.post("/skills", response_model=SkillSchema, status_code=status.HTTP_201_CREATED)
+async def create_skill(
+    payload: CreateSkillRequest,
+    user: User = Depends(current_active_user),
+) -> SkillSchema:
+    skill = await service.create_skill(
+        owner_id=user.id,
+        name=payload.name,
+        description=payload.description,
+        content=payload.content,
+    )
+    return SkillSchema.model_validate(skill)
+
+
+@router.get("/skills/{skill_id}", response_model=SkillSchema)
+async def get_skill(
+    skill_id: uuid.UUID,
+    _: User = Depends(current_active_user),
+) -> SkillSchema:
+    skill = await service.get_skill_by_id(skill_id)
+    if skill is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Skill not found",
+        )
+    return SkillSchema.model_validate(skill)
+
+
+@router.put("/skills/{skill_id}", response_model=SkillSchema)
+async def update_skill(
+    skill_id: uuid.UUID,
+    payload: UpdateSkillRequest,
+    user: User = Depends(current_active_user),
+) -> SkillSchema:
+    skill = await service.update_skill(
+        skill_id=skill_id,
+        owner_id=user.id,
+        name=payload.name,
+        description=payload.description,
+        content=payload.content,
+    )
+    if skill is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Skill not found or cannot be modified",
+        )
+    return SkillSchema.model_validate(skill)
+
+
+@router.delete("/skills/{skill_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_skill(
+    skill_id: uuid.UUID,
+    user: User = Depends(current_active_user),
+) -> None:
+    success = await service.delete_skill(skill_id, user.id)
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Skill not found or cannot be deleted",
+        )
+
+
+class SetAgentSkillsRequest(BaseModel):
+    skill_ids: list[uuid.UUID]
+
+
+@router.put("/{agent_uuid}/skills", response_model=AgentSchema)
+async def set_agent_skills(
+    agent_uuid: uuid.UUID,
+    payload: SetAgentSkillsRequest,
+    user: User = Depends(current_active_user),
+) -> AgentSchema:
+    agent = await service.set_agent_skills(agent_uuid, payload.skill_ids, user.id)
+    if agent is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Agent not found or not authorized",
+        )
+    return _agent_to_schema(agent)
+
+
 @router.get("/tools")
 async def list_tools(
     _: User = Depends(current_active_user),
@@ -340,6 +434,17 @@ def _agent_to_schema(agent) -> AgentSchema:
             for c in agent.capabilities
         ],
         linked_folder_ids=[f.id for f in agent.linked_folders] if hasattr(agent, 'linked_folders') else [],
+        skills=[
+            SkillSchema(
+                id=s.id,
+                name=s.name,
+                description=s.description,
+                content=s.content,
+                is_builtin=s.is_builtin,
+                owner_id=s.owner_id,
+            )
+            for s in agent.skills
+        ] if hasattr(agent, 'skills') else [],
     )
 
 

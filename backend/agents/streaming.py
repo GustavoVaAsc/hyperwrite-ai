@@ -43,7 +43,7 @@ from db.models import Document, User
 from . import llm
 from .executor import AgentExecutor, DocumentModifiedEvent
 from .prompts import TOOL_SYSTEM_PROMPT
-from .schemas import AgentSchema, CapabilitySchema
+from .schemas import AgentSchema, CapabilitySchema, SkillSchema
 from . import service
 
 router = APIRouter()
@@ -89,8 +89,10 @@ def _build_messages_from_db(agent: AgentSchema, action: str, text: str, options:
         missing = exc.args[0]
         raise ValueError(f"Missing required option '{missing}' for action '{action}'") from exc
 
+    system_prompt = agent.system_prompt + _build_skills_prompt(agent)
+
     return [
-        {"role": "system", "content": agent.system_prompt},
+        {"role": "system", "content": system_prompt},
         {"role": "user", "content": user_prompt},
     ]
 
@@ -224,7 +226,27 @@ def _agent_to_schema(agent) -> AgentSchema:
             for c in agent.capabilities
         ],
         linked_folder_ids=[f.id for f in agent.linked_folders] if hasattr(agent, 'linked_folders') else [],
+        skills=[
+            SkillSchema(
+                id=s.id,
+                name=s.name,
+                description=s.description,
+                content=s.content,
+                is_builtin=s.is_builtin,
+                owner_id=s.owner_id,
+            )
+            for s in agent.skills
+        ] if hasattr(agent, 'skills') else [],
     )
+
+
+def _build_skills_prompt(agent_schema: AgentSchema) -> str:
+    if not agent_schema.skills:
+        return ""
+    sections = []
+    for skill in agent_schema.skills:
+        sections.append(f"### {skill.name}\n{skill.content}")
+    return "\n\n## Skills\n\n" + "\n\n".join(sections)
 
 
 @router.websocket("/ws/editor/{doc_id}")
@@ -326,7 +348,8 @@ async def ws_chat(
                         if doc_text:
                             document_content = f"\n\nThe user is currently editing a document with the following content:\n\n{doc_text}\n"
 
-                system_with_tools = agent_schema.system_prompt + "\n\n" + document_content + "\n\n" + TOOL_SYSTEM_PROMPT
+                skills_prompt = _build_skills_prompt(agent_schema)
+                system_with_tools = agent_schema.system_prompt + skills_prompt + "\n\n" + document_content + "\n\n" + TOOL_SYSTEM_PROMPT
                 messages_for_llm = [
                     {"role": "system", "content": system_with_tools}
                 ]

@@ -4,16 +4,17 @@ import uuid
 from datetime import datetime, timezone
 from typing import Any
 
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.orm import selectinload
 from db.database import AsyncSessionLocal
-from db.models import Agent, AgentCapability, Document
+from db.models import Agent, AgentCapability, AgentSkill, AgentSkillAssignment, Document
 
 
 async def get_agents_for_user(user_id: int | None = None) -> list[Agent]:
     async with AsyncSessionLocal() as session:
         query = select(Agent).options(
-            selectinload(Agent.capabilities)
+            selectinload(Agent.capabilities),
+            selectinload(Agent.skills),
         )
         if user_id is not None:
             query = query.where((Agent.owner_id == user_id) | (Agent.is_builtin == True))
@@ -27,7 +28,8 @@ async def get_agents_for_user(user_id: int | None = None) -> list[Agent]:
 async def get_agent_by_id(agent_uuid: uuid.UUID) -> Agent | None:
     async with AsyncSessionLocal() as session:
         query = select(Agent).options(
-            selectinload(Agent.capabilities)
+            selectinload(Agent.capabilities),
+            selectinload(Agent.skills),
         ).where(Agent.id == agent_uuid)
         result = await session.execute(query)
         return result.scalar_one_or_none()
@@ -36,7 +38,8 @@ async def get_agent_by_id(agent_uuid: uuid.UUID) -> Agent | None:
 async def get_agent_by_agent_id(agent_id: str) -> Agent | None:
     async with AsyncSessionLocal() as session:
         query = select(Agent).options(
-            selectinload(Agent.capabilities)
+            selectinload(Agent.capabilities),
+            selectinload(Agent.skills),
         ).where(Agent.agent_id == agent_id)
         result = await session.execute(query)
         return result.scalar_one_or_none()
@@ -49,6 +52,7 @@ async def create_agent(
     system_prompt: str,
     capability_ids: list[str],
     linked_folder_ids: list[uuid.UUID],
+    skill_ids: list[uuid.UUID] | None = None,
 ) -> Agent:
     async with AsyncSessionLocal() as session:
         agent_uuid = uuid.uuid4()
@@ -79,10 +83,17 @@ async def create_agent(
                 )
                 session.add(new_cap)
 
+        if skill_ids:
+            for skill_id in skill_ids:
+                session.add(AgentSkillAssignment(agent_id=agent_uuid, skill_id=skill_id))
+
         await session.commit()
         await session.refresh(agent)
 
-        query = select(Agent).options(selectinload(Agent.capabilities)).where(Agent.id == agent_uuid)
+        query = select(Agent).options(
+            selectinload(Agent.capabilities),
+            selectinload(Agent.skills),
+        ).where(Agent.id == agent_uuid)
         result = await session.execute(query)
         return result.scalar_one()
 
@@ -94,6 +105,7 @@ async def update_agent(
     system_prompt: str | None,
     capability_ids: list[str] | None,
     linked_folder_ids: list[uuid.UUID] | None,
+    skill_ids: list[uuid.UUID] | None = None,
 ) -> Agent | None:
     async with AsyncSessionLocal() as session:
         query = select(Agent).where(Agent.id == agent_uuid)
@@ -129,9 +141,19 @@ async def update_agent(
                 )
                 session.add(new_cap)
 
+        if skill_ids is not None:
+            await session.execute(
+                delete(AgentSkillAssignment).where(AgentSkillAssignment.agent_id == agent_uuid)
+            )
+            for skill_id in skill_ids:
+                session.add(AgentSkillAssignment(agent_id=agent_uuid, skill_id=skill_id))
+
         await session.commit()
 
-        query = select(Agent).options(selectinload(Agent.capabilities)).where(Agent.id == agent_uuid)
+        query = select(Agent).options(
+            selectinload(Agent.capabilities),
+            selectinload(Agent.skills),
+        ).where(Agent.id == agent_uuid)
         result = await session.execute(query)
         return result.scalar_one()
 
@@ -267,3 +289,121 @@ async def get_document_by_id(doc_id: uuid.UUID, user_id: int) -> Document | None
         )
         result = await session.execute(query)
         return result.scalar_one_or_none()
+
+
+# ─── Skill CRUD ─────────────────────────────────────────────────────────────
+
+
+async def get_skills_for_user(user_id: int | None = None) -> list[AgentSkill]:
+    async with AsyncSessionLocal() as session:
+        query = select(AgentSkill)
+        if user_id is not None:
+            query = query.where((AgentSkill.owner_id == user_id) | (AgentSkill.is_builtin == True))
+        else:
+            query = query.where(AgentSkill.is_builtin == True)
+        result = await session.execute(query)
+        return list(result.scalars().all())
+
+
+async def get_skill_by_id(skill_id: uuid.UUID) -> AgentSkill | None:
+    async with AsyncSessionLocal() as session:
+        query = select(AgentSkill).where(AgentSkill.id == skill_id)
+        result = await session.execute(query)
+        return result.scalar_one_or_none()
+
+
+async def create_skill(
+    owner_id: int,
+    name: str,
+    description: str,
+    content: str,
+) -> AgentSkill:
+    async with AsyncSessionLocal() as session:
+        skill = AgentSkill(
+            id=uuid.uuid4(),
+            owner_id=owner_id,
+            name=name,
+            description=description,
+            content=content,
+            is_builtin=False,
+        )
+        session.add(skill)
+        await session.commit()
+        await session.refresh(skill)
+        return skill
+
+
+async def update_skill(
+    skill_id: uuid.UUID,
+    owner_id: int,
+    name: str | None = None,
+    description: str | None = None,
+    content: str | None = None,
+) -> AgentSkill | None:
+    async with AsyncSessionLocal() as session:
+        query = select(AgentSkill).where(AgentSkill.id == skill_id)
+        result = await session.execute(query)
+        skill = result.scalar_one_or_none()
+
+        if skill is None:
+            return None
+        if skill.is_builtin or (skill.owner_id != owner_id):
+            return None
+
+        if name is not None:
+            skill.name = name
+        if description is not None:
+            skill.description = description
+        if content is not None:
+            skill.content = content
+
+        await session.commit()
+        await session.refresh(skill)
+        return skill
+
+
+async def delete_skill(skill_id: uuid.UUID, owner_id: int) -> bool:
+    async with AsyncSessionLocal() as session:
+        query = select(AgentSkill).where(AgentSkill.id == skill_id)
+        result = await session.execute(query)
+        skill = result.scalar_one_or_none()
+
+        if skill is None:
+            return False
+        if skill.is_builtin or (skill.owner_id != owner_id):
+            return False
+
+        await session.delete(skill)
+        await session.commit()
+        return True
+
+
+async def set_agent_skills(
+    agent_uuid: uuid.UUID,
+    skill_ids: list[uuid.UUID],
+    owner_id: int,
+) -> Agent | None:
+    async with AsyncSessionLocal() as session:
+        query = select(Agent).where(Agent.id == agent_uuid)
+        result = await session.execute(query)
+        agent = result.scalar_one_or_none()
+
+        if agent is None:
+            return None
+        if not agent.is_builtin and agent.owner_id != owner_id:
+            return None
+
+        await session.execute(
+            delete(AgentSkillAssignment).where(AgentSkillAssignment.agent_id == agent_uuid)
+        )
+        for skill_id in skill_ids:
+            session.add(AgentSkillAssignment(agent_id=agent_uuid, skill_id=skill_id))
+
+        await session.commit()
+
+        query = select(Agent).options(
+            selectinload(Agent.capabilities),
+            selectinload(Agent.skills),
+        ).where(Agent.id == agent_uuid)
+        result = await session.execute(query)
+        return result.scalar_one()
