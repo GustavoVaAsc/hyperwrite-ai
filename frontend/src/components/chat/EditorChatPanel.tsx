@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { useAuthStore } from '../../store/authStore'
 import { getApiUrl, getHeaders } from '../../services/api'
+import { SkillsModal } from './SkillsModal'
 import './EditorChatPanel.css'
 
 interface Skill {
@@ -36,6 +37,7 @@ export function EditorChatPanel({ docId, onDocumentUpdated }: EditorChatPanelPro
   const [draft, setDraft] = useState('')
   const [isStreaming, setIsStreaming] = useState(false)
   const [conversationId, setConversationId] = useState<string | null>(null)
+  const [skillsModalOpen, setSkillsModalOpen] = useState(false)
 
   const wsRef = useRef<WebSocket | null>(null)
   const agentMenuRef = useRef<HTMLDivElement>(null)
@@ -97,6 +99,19 @@ export function EditorChatPanel({ docId, onDocumentUpdated }: EditorChatPanelPro
           role: 'assistant',
           content: `Hi — I'm ${data[0].name}. ${data[0].description}`,
         }])
+      }
+    } catch {}
+  }
+
+  async function refreshAgents() {
+    try {
+      const res = await fetch(`${getApiUrl()}/api/agentes`, { headers: getHeaders() })
+      if (!res.ok) return
+      const data: Agent[] = await res.json()
+      setAgents(data)
+      if (selectedAgent) {
+        const updated = data.find((a) => a.id === selectedAgent.id)
+        if (updated) setSelectedAgent(updated)
       }
     } catch {}
   }
@@ -336,15 +351,21 @@ export function EditorChatPanel({ docId, onDocumentUpdated }: EditorChatPanelPro
       {selectedAgent && (
         <div className="agent-info">
           <p className="agent-description">{selectedAgent.description}</p>
-          {selectedAgent.skills && selectedAgent.skills.length > 0 && (
-            <div className="agent-skills-tags">
-              {selectedAgent.skills.map((skill) => (
-                <span key={skill.id} className="skill-tag" title={skill.description}>
-                  {skill.name}
-                </span>
-              ))}
-            </div>
-          )}
+          <div className="agent-skills-tags">
+            {selectedAgent.skills?.map((skill) => (
+              <span key={skill.id} className="skill-tag" title={skill.description}>
+                {skill.name}
+              </span>
+            ))}
+            <button
+              type="button"
+              className="skill-tag skill-tag--manage"
+              onClick={() => setSkillsModalOpen(true)}
+              title="Manage skills"
+            >
+              {selectedAgent.skills && selectedAgent.skills.length > 0 ? 'Manage' : '+ Add skills'}
+            </button>
+          </div>
         </div>
       )}
 
@@ -406,6 +427,15 @@ export function EditorChatPanel({ docId, onDocumentUpdated }: EditorChatPanelPro
           </svg>
         </button>
       </div>
+
+      {skillsModalOpen && selectedAgent && (
+        <SkillsModal
+          agentId={selectedAgent.id}
+          agentSkillIds={selectedAgent.skills?.map((s) => s.id) || []}
+          onClose={() => setSkillsModalOpen(false)}
+          onSkillsChanged={refreshAgents}
+        />
+      )}
     </aside>
   )
 }
