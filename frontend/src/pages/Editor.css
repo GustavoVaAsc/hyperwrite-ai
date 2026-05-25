@@ -35,6 +35,7 @@ body:has(.editor-page) #root {
   height: 100vh;
   box-sizing: border-box;
   overflow: hidden;
+  text-align: left;
 }
 
 /* ── Fondo de Cuadrícula y Orbes Espaciales ─────────── */
@@ -298,20 +299,27 @@ body:has(.editor-page) #root {
   background-color: #ffffff !important;
   color: #000000 !important;
   width: 816px !important; /* Ancho exacto de hoja Carta/A4 */
-  height: 1056px !important; /* Límite vertical estricto de la hoja */
+  min-height: 1056px !important; /* Límite vertical base de la hoja */
   max-width: 100%;
   border-radius: 4px;
   box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
   box-sizing: border-box;
   margin: 40px auto;
-  overflow: hidden !important; /* Evita que la hoja crezca físicamente */
+  display: block !important;
 }
 
 :root body .editor-page .tiptap-editor-content .ProseMirror {
   padding: 96px !important; /* Límite inquebrantable de 1 pulgada a los 4 costados */
   box-sizing: border-box;
-  height: 100%;
-  overflow: hidden !important; /* Oculta cualquier texto que intente rebasar el margen inferior */
+  display: block !important;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+  text-align: left;
+}
+
+:root body .editor-page .tiptap-editor-content .ProseMirror p {
+  margin: 0 0 1rem !important;
 }
 
 /* Forzar que todos los elementos textuales sean negros en el papel */

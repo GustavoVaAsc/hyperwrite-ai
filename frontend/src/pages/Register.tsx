@@ -86,6 +86,16 @@ export function Register() {
     e.preventDefault()
     setError('')
 
+    if (!formData.email.trim() || !formData.username.trim() || !formData.password || !formData.confirmPassword) {
+      setError('Please fill in all required fields.')
+      return
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      setError('Please enter a valid email address.')
+      return
+    }
+
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match')
       return
@@ -187,7 +197,7 @@ export function Register() {
           <div className="register-card">
             <div className="card-top-line" />
 
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={handleSubmit} noValidate>
               {error && (
                 <div className="auth-error">
                   <IconAlert />
@@ -204,7 +214,7 @@ export function Register() {
                     type="email"
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    placeholder="you@example.com"
+                    placeholder="name@email.com"
                     required
                     autoComplete="email"
                   />
@@ -220,7 +230,7 @@ export function Register() {
                     type="text"
                     value={formData.username}
                     onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                    placeholder="johndoe"
+                    placeholder="user1234"
                     required
                     autoComplete="username"
                   />
@@ -236,7 +246,7 @@ export function Register() {
                     type="text"
                     value={formData.display_name}
                     onChange={(e) => setFormData({ ...formData, display_name: e.target.value })}
-                    placeholder="John Doe"
+                    placeholder="Your name"
                     autoComplete="name"
                   />
                 </div>

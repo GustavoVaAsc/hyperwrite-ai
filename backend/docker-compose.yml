@@ -51,6 +51,8 @@ services:
       - "8080:8080"
     volumes:
       - ./llms/models:/models
+    networks:
+      - hyperconnection
     deploy:
       resources:
         reservations:
@@ -76,6 +78,8 @@ services:
       - "8081:8080"
     volumes:
       - ./llms/models:/models
+    networks:
+      - hyperconnection
     deploy:
       resources:
         reservations:
@@ -84,7 +88,7 @@ services:
               count: all
               capabilities: [gpu]
     command: >
-      -m /models/gemma-4-E2B-RotorQuant-Q8_0.gguf
+      -m /models/qwen2.5-3b-instruct-q8_0.gguf
       -c 4096
       --host 0.0.0.0
       --port 8080

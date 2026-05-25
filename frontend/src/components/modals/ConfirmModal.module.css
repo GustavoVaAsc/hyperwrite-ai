@@ -1,93 +1,14 @@
 .backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 100;
-}
-
-.content {
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 1.5rem;
-  width: 400px;
-  max-width: 90vw;
-  box-shadow: var(--shadow);
-}
-
-.header {
-  display: flex;
-  align-items: center;
-  gap: 0;
-}
-
-.title {
-  margin: 0 0 0.75rem;
-  color: var(--text-h);
-  font-size: 1.1rem;
-}
-
-.message {
-  color: var(--text);
-  margin: 0 0 1.5rem;
-}
-
-.actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.75rem;
-}
-
-.actions button {
-  padding: 0.5rem 1rem;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  background: var(--bg);
-  color: var(--text);
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.actions button:hover {
-  border-color: var(--accent);
-  color: var(--accent);
-}
-
-.actions button.primary {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: white;
-}
-
-.actions button.primary:hover {
-  opacity: 0.9;
-}
-
-.actions button.danger {
-  background: #dc2626;
-  border-color: #dc2626;
-  color: white;
-}
-
-.actions button.danger:hover {
-  background: #b91c1c;
-  border-color: #b91c1c;
-}
-
-/* ============================================================
-   Cyber morado theme — scoped to .files-page only.
-   Doesn't affect any other page using ConfirmModal.
-   ============================================================ */
-
-:global(.files-page) .backdrop {
   background: rgba(10, 1, 24, 0.78);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   animation: cyberFadeIn 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
 }
 
 @keyframes cyberFadeIn {
@@ -95,14 +16,14 @@
   to   { opacity: 1; }
 }
 
-:global(.files-page) .content {
+.content {
   background: var(--border-sub);
   border: none;
   border-radius: 16px;
   padding: 28px 28px 24px;
   width: 440px;
   max-width: 90vw;
-  font-family: 'Syne', 'Segoe UI', sans-serif;
+  font-family: var(--font-display, 'Syne', 'Segoe UI', sans-serif);
   box-shadow:
     0 20px 60px rgba(0, 0, 0, 0.6),
     0 0 40px rgba(124, 58, 237, 0.18);
@@ -117,7 +38,7 @@
   to   { opacity: 1; transform: translateY(0)   scale(1);    }
 }
 
-:global(.files-page) .content::before {
+.content::before {
   content: '';
   position: absolute;
   top: 50%;
@@ -137,7 +58,7 @@
   z-index: -2;
 }
 
-:global(.files-page) .content::after {
+.content::after {
   content: '';
   position: absolute;
   inset: 1px;
@@ -151,14 +72,14 @@
   100% { transform: rotate(360deg); }
 }
 
-:global(.files-page) .header {
+.header {
   display: flex;
   align-items: center;
   gap: 12px;
   margin-bottom: 14px;
 }
 
-:global(.files-page) .icon {
+.icon {
   width: 36px;
   height: 36px;
   border-radius: 10px;
@@ -171,7 +92,7 @@
   flex-shrink: 0;
 }
 
-:global(.files-page) .title {
+.title {
   margin: 0;
   color: #F1F0FF;
   font-size: 19px;
@@ -179,57 +100,60 @@
   letter-spacing: -0.02em;
 }
 
-:global(.files-page) .message {
+.message {
   margin: 0 0 24px;
   color: #9B8FBE;
   font-size: 14px;
   line-height: 1.6;
-  font-family: 'Syne', 'Segoe UI', sans-serif;
+  font-family: var(--font-display, 'Syne', 'Segoe UI', sans-serif);
 }
 
-:global(.files-page) .actions {
+.actions {
+  display: flex;
+  justify-content: flex-end;
   gap: 10px;
 }
 
-:global(.files-page) .actions button {
+.actions button {
   padding: 10px 20px;
   border-radius: 8px;
   font-size: 13px;
   font-weight: 600;
-  font-family: 'Syne', 'Segoe UI', sans-serif;
+  font-family: var(--font-display, 'Syne', 'Segoe UI', sans-serif);
   letter-spacing: 0.01em;
   background: transparent;
   color: #9B8FBE;
   border: 1px solid rgba(124, 58, 237, 0.3);
   transition: all 0.18s ease;
+  cursor: pointer;
 }
 
-:global(.files-page) .actions button:hover {
+.actions button:hover {
   color: #F1F0FF;
   background: rgba(124, 58, 237, 0.12);
   border-color: rgba(124, 58, 237, 0.55);
 }
 
-:global(.files-page) .actions button.primary {
+.actions button.primary {
   background: #7C3AED;
   border-color: #7C3AED;
   color: white;
 }
 
-:global(.files-page) .actions button.primary:hover {
+.actions button.primary:hover {
   background: #8B47FF;
   border-color: #8B47FF;
   color: white;
   box-shadow: 0 6px 24px rgba(124, 58, 237, 0.45);
 }
 
-:global(.files-page) .actions button.danger {
+.actions button.danger {
   background: rgba(232, 121, 249, 0.12);
   border-color: rgba(232, 121, 249, 0.45);
   color: #E879F9;
 }
 
-:global(.files-page) .actions button.danger:hover {
+.actions button.danger:hover {
   background: #E879F9;
   border-color: #E879F9;
   color: #0A0118;

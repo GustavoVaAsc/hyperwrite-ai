@@ -412,7 +412,14 @@ useEffect(() => {
             Knowledge
           </a>
           {user && <span className="nav-user">{user.display_name || user.username}</span>}
-          <button onClick={handleLogout} className="nav-logout">Logout</button>
+          <button onClick={handleLogout} className="nav-logout">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width="14" height="14">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+              <polyline points="16 17 21 12 16 7" />
+              <line x1="21" y1="12" x2="9" y2="12" />
+            </svg>
+            Logout
+          </button>
         </div>
       </header>
       {editor && (
@@ -491,7 +498,12 @@ useEffect(() => {
 
           <ToolbarButton
             onClick={() => editor.chain().focus().setTextAlign('left').run()}
-            isActive={editor.isActive({ textAlign: 'left' })}
+            isActive={
+              editor.isActive({ textAlign: 'left' }) ||
+              (!editor.isActive({ textAlign: 'center' }) &&
+               !editor.isActive({ textAlign: 'right' }) &&
+               !editor.isActive({ textAlign: 'justify' }))
+            }
             title="Align Left"
           >
             ≡L

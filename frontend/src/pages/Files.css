@@ -116,20 +116,6 @@ body:has(.files-page) #root {
   padding: 6px 14px;
 }
 
-.nav-logout {
-  font-size: 13px;
-  font-weight: 500;
-  font-family: var(--font-mono);
-  color: var(--pink);
-  background: rgba(232, 121, 249, 0.08);
-  border: 1px solid rgba(232, 121, 249, 0.25);
-  cursor: pointer;
-  padding: 6px 14px;
-  border-radius: 6px;
-  transition: color 0.2s, background 0.2s;
-}
-.nav-logout:hover { color: white; background: rgba(232, 121, 249, 0.2); }
-
 .files-main {
   flex: 1;
   display: flex;
