@@ -17,6 +17,18 @@ class CapabilitySchema(BaseModel):
         from_attributes = True
 
 
+class SkillSchema(BaseModel):
+    id: uuid.UUID
+    name: str
+    description: str
+    content: str
+    is_builtin: bool
+    owner_id: int | None = None
+
+    class Config:
+        from_attributes = True
+
+
 class AgentSchema(BaseModel):
     id: uuid.UUID
     agent_id: str
@@ -26,9 +38,22 @@ class AgentSchema(BaseModel):
     is_builtin: bool
     capabilities: list[CapabilitySchema] = []
     linked_folder_ids: list[uuid.UUID] = []
+    skills: list[SkillSchema] = []
 
     class Config:
         from_attributes = True
+
+
+class CreateSkillRequest(BaseModel):
+    name: str = Field(min_length=1, max_length=100)
+    description: str = Field(min_length=1)
+    content: str = Field(min_length=1)
+
+
+class UpdateSkillRequest(BaseModel):
+    name: str | None = Field(default=None, min_length=1, max_length=100)
+    description: str | None = Field(default=None, min_length=1)
+    content: str | None = Field(default=None, min_length=1)
 
 
 class CreateAgentRequest(BaseModel):
@@ -37,6 +62,7 @@ class CreateAgentRequest(BaseModel):
     system_prompt: str = Field(min_length=1)
     capability_ids: list[str] = []
     linked_folder_ids: list[uuid.UUID] = []
+    skill_ids: list[uuid.UUID] = []
 
 
 class UpdateAgentRequest(BaseModel):
@@ -45,6 +71,7 @@ class UpdateAgentRequest(BaseModel):
     system_prompt: str | None = Field(default=None, min_length=1)
     capability_ids: list[str] | None = None
     linked_folder_ids: list[uuid.UUID] | None = None
+    skill_ids: list[uuid.UUID] | None = None
 
 
 class MessageSchema(BaseModel):

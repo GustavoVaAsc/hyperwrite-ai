@@ -175,15 +175,56 @@
   border-color: rgba(124, 58, 237, 0.3);
 }
 
-.agent-description {
-  margin: 0;
+.agent-info {
   padding: 8px 18px 10px;
   border-bottom: 1px solid rgba(124, 58, 237, 0.15);
+}
+
+.agent-description {
+  margin: 0;
   font-family: var(--font-mono, 'DM Mono', monospace);
   font-size: 10.5px;
   color: #9B8FBE;
   line-height: 1.4;
   letter-spacing: 0.02em;
+}
+
+.agent-skills-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.skill-tag {
+  display: inline-block;
+  padding: 2px 8px;
+  background: rgba(6, 182, 212, 0.1);
+  border: 1px solid rgba(6, 182, 212, 0.3);
+  border-radius: 999px;
+  font-family: var(--font-mono, 'DM Mono', monospace);
+  font-size: 9.5px;
+  color: #06B6D4;
+  letter-spacing: 0.02em;
+  cursor: default;
+  transition: background 0.15s ease;
+}
+
+.skill-tag:hover {
+  background: rgba(6, 182, 212, 0.18);
+}
+
+.skill-tag--manage {
+  background: rgba(124, 58, 237, 0.1);
+  border-color: rgba(124, 58, 237, 0.3);
+  color: #9B8FBE;
+  cursor: pointer;
+}
+
+.skill-tag--manage:hover {
+  background: rgba(124, 58, 237, 0.2);
+  border-color: rgba(124, 58, 237, 0.5);
+  color: #F1F0FF;
 }
 
 .chat-panel-messages {
