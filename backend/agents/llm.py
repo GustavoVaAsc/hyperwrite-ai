@@ -16,7 +16,9 @@ Retry logic: 3 attempts with exponential backoff (1s, 2s, 4s).
 from __future__ import annotations
 
 import asyncio
+import json
 import os
+import re
 from collections.abc import AsyncIterator
 
 from openai import AsyncOpenAI, APIConnectionError, APIError, APITimeoutError
@@ -24,6 +26,104 @@ from openai import AsyncOpenAI, APIConnectionError, APIError, APITimeoutError
 
 class LLMError(RuntimeError):
     """Raised when the LLM call fails (unreachable, timeout, bad response, ...)."""
+
+
+def _extract_json_from_content(content: str) -> tuple[str, list[dict] | None]:
+    """Extract JSON tool calls from content text when model outputs them as text instead of proper tool_calls."""
+    tool_calls = None
+
+    json_pattern = r'```json\s*(\{[^}]*(?:\{[^}]*\}[^}]*)*\})\s*```'
+    match = re.search(json_pattern, content, re.DOTALL)
+    if match:
+        try:
+            parsed = json.loads(match.group(1))
+            if isinstance(parsed, dict) and "name" in parsed and "arguments" in parsed:
+                tool_calls = [{
+                    "id": f"call_{abs(hash(parsed['name'])) % (10**9)}",
+                    "name": parsed["name"],
+                    "arguments": json.dumps(parsed["arguments"]) if isinstance(parsed["arguments"], dict) else parsed["arguments"],
+                }]
+                content = content[:match.start()] + content[match.end():]
+        except json.JSONDecodeError:
+            pass
+
+    if not tool_calls:
+        tool_call_pattern = r'\{"name":\s*"(\w+)",\s*"arguments":\s*(\{[^}]*(?:\{[^}]*\}[^}]*)*\})\}'
+        for match in re.finditer(tool_call_pattern, content):
+            try:
+                name = match.group(1)
+                args = json.loads(match.group(2))
+                tool_calls = [{
+                    "id": f"call_{abs(hash(name)) % (10**9)}",
+                    "name": name,
+                    "arguments": json.dumps(args),
+                }]
+                content = content[:match.start()] + content[match.end():]
+                break
+            except json.JSONDecodeError:
+                continue
+
+    if not tool_calls:
+        xml_tool_pattern = r'<(\w+)\s+([^>]+)/>'
+        for match in re.finditer(xml_tool_pattern, content):
+            tag_name = match.group(1)
+            attrs_str = match.group(2)
+            if tag_name in ("insert_text", "replace_content", "rag_lookup", "web_search", "insert_formula", "insert_table", "format_text"):
+                try:
+                    args = {}
+                    for arg_match in re.finditer(r'(\w+)=\"(.*?)\"(?:\s|$)', attrs_str):
+                        args[arg_match.group(1)] = arg_match.group(2)
+                    tool_calls = [{
+                        "id": f"call_{abs(hash(tag_name)) % (10**9)}",
+                        "name": tag_name,
+                        "arguments": json.dumps(args),
+                    }]
+                    content = content[:match.start()] + content[match.end():]
+                    break
+                except Exception:
+                    continue
+
+    if not tool_calls:
+        xml_multiline_pattern = r'<(\w+)\s*([^>]*)>(.*?)</\1>'
+        for match in re.finditer(xml_multiline_pattern, content, re.DOTALL):
+            tag_name = match.group(1)
+            attrs_str = match.group(2)
+            inner_content = match.group(3).strip()
+            if tag_name in ("insert_text", "replace_content", "rag_lookup", "web_search", "insert_formula", "insert_table", "format_text"):
+                try:
+                    args = {}
+                    for arg_match in re.finditer(r'(\w+)=\"(.*?)\"(?:\s|$)', attrs_str):
+                        args[arg_match.group(1)] = arg_match.group(2)
+                    if inner_content:
+                        args["text"] = inner_content
+                    tool_calls = [{
+                        "id": f"call_{abs(hash(tag_name)) % (10**9)}",
+                        "name": tag_name,
+                        "arguments": json.dumps(args),
+                    }]
+                    content = content[:match.start()] + content[match.end():]
+                    break
+                except Exception:
+                    continue
+
+    if not tool_calls:
+        bare_json_pattern = r'\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}'
+        for match in re.finditer(bare_json_pattern, content):
+            try:
+                parsed = json.loads(match.group())
+                if isinstance(parsed, dict) and "name" in parsed and "arguments" in parsed:
+                    tool_calls = [{
+                        "id": f"call_{abs(hash(parsed['name'])) % (10**9)}",
+                        "name": parsed["name"],
+                        "arguments": json.dumps(parsed["arguments"]) if isinstance(parsed["arguments"], dict) else parsed["arguments"],
+                    }]
+                    content = content[:match.start()] + content[match.end():]
+                    break
+            except json.JSONDecodeError:
+                continue
+
+    content = re.sub(r'^[\s\n]+|[\s\n]+$', '', content)
+    return content, tool_calls
 
 
 def _client() -> AsyncOpenAI:
@@ -156,5 +256,7 @@ async def complete_with_tools(
             }
             for tc in choice.tool_calls
         ]
+    else:
+        content, tool_calls = _extract_json_from_content(content)
 
     return _sanitize_content(content), tool_calls

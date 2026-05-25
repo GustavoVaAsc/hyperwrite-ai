@@ -16,7 +16,12 @@ interface Message {
   content: string
 }
 
-export function EditorChatPanel() {
+interface EditorChatPanelProps {
+  docId?: string
+  onDocumentUpdated?: (content: Record<string, unknown>) => void
+}
+
+export function EditorChatPanel({ docId, onDocumentUpdated }: EditorChatPanelProps) {
   const [agents, setAgents] = useState<Agent[]>([])
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null)
   const [agentMenuOpen, setAgentMenuOpen] = useState(false)
@@ -94,7 +99,7 @@ export function EditorChatPanel() {
       const res = await fetch(`${getApiUrl()}/api/agentes/conversations`, {
         method: 'POST',
         headers: getHeaders(),
-        body: JSON.stringify({ agent_id: agentId }),
+        body: JSON.stringify({ agent_id: agentId, document_id: docId || null }),
       })
       if (!res.ok) return null
       const data = await res.json()
@@ -123,6 +128,8 @@ export function EditorChatPanel() {
           }
           return prev
         })
+      } else if (data.type === 'document_updated') {
+        onDocumentUpdated?.(data.content)
       } else if (data.type === 'done') {
         setIsStreaming(false)
         streamBufferRef.current = ''

@@ -86,7 +86,7 @@ services:
               count: all
               capabilities: [gpu]
     command: >
-      -m /models/gemma-4-E2B-RotorQuant-Q8_0.gguf
+      -m /models/qwen2.5-coder-7b-instruct-q5_k_s.gguf
       -c 16384
       --host 0.0.0.0
       --port 8080
