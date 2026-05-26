@@ -151,6 +151,11 @@ export function Files() {
             <span className="nav-user">{user.display_name || user.username}</span>
           )}
           <button onClick={handleLogout} className="nav-logout">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width="14" height="14">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+              <polyline points="16 17 21 12 16 7" />
+              <line x1="21" y1="12" x2="9" y2="12" />
+            </svg>
             Logout
           </button>
         </div>
@@ -257,7 +262,7 @@ export function Files() {
               <span className="doc-name-pill">
                 {deleteConfirm.doc.title || UI_COPY.UNTITLED}
               </span>
-              ? {UI_COPY.DELETE_CONFIRM_SUFFIX}
+              ? This action cannot be undone.
             </>
           }
           onConfirm={handleConfirmDelete}

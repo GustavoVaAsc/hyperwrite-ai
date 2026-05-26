@@ -39,7 +39,6 @@ body:has(.register-page) #root {
   overflow-y: auto;
 }
 
-/* ── Custom Scrollbar ───────────────────────────────── */
 .register-page::-webkit-scrollbar {
   width: 8px;
 }
@@ -366,7 +365,6 @@ body:has(.register-page) #root {
 .register-page .strength-text.medium { color: var(--purple); }
 .register-page .strength-text.strong { color: var(--cyan); }
 
-/* ── Button ─────────────────────────────────────────── */
 .register-page .btn-primary {
   width: 100%;
   padding: 14px;

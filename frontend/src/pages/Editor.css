@@ -35,6 +35,7 @@ body:has(.editor-page) #root {
   height: 100vh;
   box-sizing: border-box;
   overflow: hidden;
+  text-align: left;
 }
 
 /* ── Fondo de Cuadrícula y Orbes Espaciales ─────────── */
@@ -264,14 +265,12 @@ body:has(.editor-page) #root {
   line-height: 1.4;
 }
 
-/* ── Tipografía del Chat ───────────────────────────── */
 .editor-page .chat-text,
 .editor-page .chat-system-text,
 .editor-page .chat-panel-input-textarea {
   font-family: var(--sans) !important;
 }
 
-/* ── Área de Escritura ("La Hoja de Papel") ─────────── */
 .editor-page .editor-content-area {
   flex: 1;
   padding: 40px 20px;
@@ -297,24 +296,30 @@ body:has(.editor-page) #root {
 :root body .editor-page .tiptap-editor-content {
   background-color: #ffffff !important;
   color: #000000 !important;
-  width: 816px !important; /* Ancho exacto de hoja Carta/A4 */
-  height: 1056px !important; /* Límite vertical estricto de la hoja */
+  width: 816px !important; 
+  min-height: 1056px !important;
   max-width: 100%;
   border-radius: 4px;
   box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
   box-sizing: border-box;
   margin: 40px auto;
-  overflow: hidden !important; /* Evita que la hoja crezca físicamente */
+  display: block !important;
 }
 
 :root body .editor-page .tiptap-editor-content .ProseMirror {
-  padding: 96px !important; /* Límite inquebrantable de 1 pulgada a los 4 costados */
+  padding: 96px !important; 
   box-sizing: border-box;
-  height: 100%;
-  overflow: hidden !important; /* Oculta cualquier texto que intente rebasar el margen inferior */
+  display: block !important;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+  text-align: left;
 }
 
-/* Forzar que todos los elementos textuales sean negros en el papel */
+:root body .editor-page .tiptap-editor-content .ProseMirror p {
+  margin: 0 0 1rem !important;
+}
+
 :root body .editor-page .tiptap-editor-content .ProseMirror,
 :root body .editor-page .tiptap-editor-content .ProseMirror h1,
 :root body .editor-page .tiptap-editor-content .ProseMirror h2,
@@ -324,7 +329,6 @@ body:has(.editor-page) #root {
   color: #000000 !important;
 }
 
-/* ── Resizable Images ──────────────────────────────── */
 :root body .editor-page .tiptap-editor-content .ProseMirror .resizable-image-wrapper {
   display: block;
   margin: 12px 0;
@@ -394,7 +398,6 @@ body:has(.editor-page) #root {
   left: 2px;
 }
 
-/* ── Find & Replace Bar ────────────────────────────── */
 .editor-page .find-replace-bar {
   display: flex;
   flex-direction: column;
@@ -455,7 +458,6 @@ body:has(.editor-page) #root {
   margin-left: auto;
 }
 
-/* ── Search Match Highlights ───────────────────────── */
 .search-match {
   background: rgba(255, 213, 0, 0.35);
   border-radius: 2px;
@@ -466,7 +468,6 @@ body:has(.editor-page) #root {
   outline: 2px solid rgba(255, 140, 0, 0.8);
 }
 
-/* ── Status Bar (Word Count / Reading Time) ────────── */
 .editor-page .editor-status-bar {
   display: flex;
   align-items: center;
@@ -481,7 +482,6 @@ body:has(.editor-page) #root {
   flex-shrink: 0;
 }
 
-/* ── Print / Export PDF ────────────────────────────── */
 @media print {
   body * {
     visibility: hidden !important;

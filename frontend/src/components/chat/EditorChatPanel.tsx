@@ -8,8 +8,32 @@ interface Skill {
   id: string
   name: string
   description: string
+  color: string
 }
 
+const AGENTS: Agent[] = [
+  {
+    id: 'cientifico',
+    name: 'Scientist',
+    description: 'Specialist in academic and technical texts.',
+    color: 'var(--cyan)',
+  },
+  {
+    id: 'narrativo',
+    name: 'Narrative',
+    description: 'Creative writing and storytelling assistant.',
+    color: 'var(--purple)',
+  },
+  {
+    id: 'legal',
+    name: 'Legal',
+    description: 'Legal drafting assistant.',
+    color: 'var(--pink)',
+  },
+]
+
+type Attachment = { id: string; name: string }
+type Message = {
 interface Agent {
   id: string
   agent_id: string
@@ -24,6 +48,39 @@ interface Message {
   content: string
 }
 
+type ChatSession = {
+  id: string
+  title: string
+  agentId: string
+  messages: Message[]
+  updatedAt: number
+}
+
+let attachmentCounter = 0
+
+function buildGreeting(agent: Agent): Message {
+  return {
+    id: `greeting-${agent.id}-${Date.now()}`,
+    role: 'assistant',
+    content: `Hi — I'm ${agent.name}. Share a prompt or attach a file and I'll help.`,
+  }
+}
+
+export function EditorChatPanel() {
+  const [sessions, setSessions] = useState<ChatSession[]>([{
+    id: `sess-${Date.now()}`,
+    title: 'New Chat',
+    agentId: AGENTS[0].id,
+    messages: [buildGreeting(AGENTS[0])],
+    updatedAt: Date.now()
+  }])
+  const [activeSessionId, setActiveSessionId] = useState<string>(sessions[0].id)
+  const [view, setView] = useState<'chat' | 'history'>('chat')
+
+  const [editingSessionId, setEditingSessionId] = useState<string | null>(null)
+  const [editingTitle, setEditingTitle] = useState('')
+
+  const [agentMenuOpen, setAgentMenuOpen] = useState(false)
 interface EditorChatPanelProps {
   docId?: string
   onDocumentUpdated?: (content: Record<string, unknown>) => void
@@ -45,7 +102,17 @@ export function EditorChatPanel({ docId, onDocumentUpdated }: EditorChatPanelPro
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const streamBufferRef = useRef('')
 
+  const activeSession = sessions.find((s) => s.id === activeSessionId) || sessions[0]
+  const agentId = activeSession.agentId
+  const messages = activeSession.messages
+  const agent = AGENTS.find((a) => a.id === agentId) ?? AGENTS[0]
   const token = useAuthStore((s) => s.accessToken)
+
+  const updateActiveSession = useCallback((updates: Partial<ChatSession>) => {
+    setSessions((prev) =>
+      prev.map((s) => (s.id === activeSessionId ? { ...s, ...updates, updatedAt: Date.now() } : s))
+    )
+  }, [activeSessionId])
 
   useEffect(() => {
     fetchAgents()
@@ -189,8 +256,31 @@ export function EditorChatPanel({ docId, onDocumentUpdated }: EditorChatPanelPro
       role: 'user',
       content: trimmed,
     }
-    setMessages((prev) => [...prev, userMsg])
+    
+    let newTitle = activeSession.title
+    if (activeSession.messages.length <= 1 && trimmed) {
+      newTitle = trimmed.slice(0, 25) + (trimmed.length > 25 ? '...' : '')
+    }
+
+    updateActiveSession({
+      title: newTitle,
+      messages: [...activeSession.messages, userMsg],
+    })
     setDraft('')
+    setPendingFiles([])
+  }, [draft, pendingFiles, activeSession, updateActiveSession])
+
+  const handleNewChat = () => {
+    const newSession: ChatSession = {
+      id: `sess-${Date.now()}`,
+      title: 'New Chat',
+      agentId: AGENTS[0].id,
+      messages: [buildGreeting(AGENTS[0])],
+      updatedAt: Date.now(),
+    }
+    setSessions((prev) => [newSession, ...prev])
+    setActiveSessionId(newSession.id)
+    setView('chat')
     setIsStreaming(true)
     streamBufferRef.current = ''
 
@@ -247,6 +337,54 @@ export function EditorChatPanel({ docId, onDocumentUpdated }: EditorChatPanelPro
     setIsStreaming(false)
   }
 
+  const handleDeleteSession = (e: React.MouseEvent, id: string) => {
+    e.stopPropagation()
+    setSessions((prev) => {
+      const filtered = prev.filter((s) => s.id !== id)
+      if (filtered.length === 0) {
+        handleNewChat()
+        return prev
+      }
+      if (activeSessionId === id) setActiveSessionId(filtered[0].id)
+      return filtered
+    })
+  }
+
+  const handleStartRename = (e: React.MouseEvent, session: ChatSession) => {
+    e.stopPropagation()
+    setEditingSessionId(session.id)
+    setEditingTitle(session.title)
+  }
+
+  const handleSaveRename = () => {
+    if (editingSessionId && editingTitle.trim()) {
+      updateActiveSession({ title: editingTitle.trim() })
+      setSessions((prev) => prev.map((s) => (s.id === editingSessionId ? { ...s, title: editingTitle.trim() } : s)))
+    }
+    setEditingSessionId(null)
+  }
+
+  const handleRenameKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') handleSaveRename()
+    if (e.key === 'Escape') setEditingSessionId(null)
+  }
+
+  const handleAgentSelect = (id: string) => {
+    setAgentMenuOpen(false)
+    if (id === agentId) return
+    const next = AGENTS.find((a) => a.id === id)
+    if (!next) return
+    updateActiveSession({
+      agentId: id,
+      messages: [
+        ...activeSession.messages,
+        {
+          id: `switch-${Date.now()}`,
+          role: 'system',
+          content: `Switched to ${next.name}. ${next.description}`,
+        },
+      ],
+    })
   const handleAgentSelect = (agent: Agent) => {
     setAgentMenuOpen(false)
     if (agent.id === selectedAgent?.id) return
@@ -277,6 +415,82 @@ export function EditorChatPanel({ docId, onDocumentUpdated }: EditorChatPanelPro
 
   const canSend = draft.trim().length > 0 && !isStreaming
 
+  if (view === 'history') {
+    return (
+      <aside className="editor-chat-panel" aria-label="AI assistant history">
+        <div className="chat-panel-accent-line" aria-hidden="true" />
+        <header className="chat-history-header">
+          <button
+            type="button"
+            className="chat-panel-icon-btn"
+            onClick={() => setView('chat')}
+            title="Back to chat"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="19" y1="12" x2="5" y2="12" />
+              <polyline points="12 19 5 12 12 5" />
+            </svg>
+          </button>
+          <span className="chat-history-header-title">Chat History</span>
+          <button
+            type="button"
+            className="chat-panel-icon-btn"
+            onClick={handleNewChat}
+            title="New chat"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19" />
+              <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+          </button>
+        </header>
+        <div className="chat-history-list">
+          {sessions.map((s) => (
+            <div
+              key={s.id}
+              className={`chat-history-item ${s.id === activeSessionId ? 'active' : ''}`}
+              onClick={() => { setActiveSessionId(s.id); setView('chat') }}
+            >
+              <div className="chat-history-title">
+                {editingSessionId === s.id ? (
+                  <input
+                    type="text"
+                    className="chat-history-title-input"
+                    value={editingTitle}
+                    onChange={(e) => setEditingTitle(e.target.value)}
+                    onBlur={handleSaveRename}
+                    onKeyDown={handleRenameKeyDown}
+                    onClick={(e) => e.stopPropagation()}
+                    autoFocus
+                  />
+                ) : (
+                  s.title
+                )}
+              </div>
+              <div className="chat-history-bottom">
+                <span className="chat-history-meta">
+                  {new Date(s.updatedAt).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                </span>
+                <div className="chat-history-actions">
+                  <button className="chat-history-action-btn edit-btn" onClick={(e) => handleStartRename(e, s)} title="Rename chat">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M12 20h9" /><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+                    </svg>
+                  </button>
+                  <button className="chat-history-action-btn delete-btn" onClick={(e) => handleDeleteSession(e, s.id)} title="Delete chat">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" /><path d="M10 11v6M14 11v6" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </aside>
+    )
+  }
+
   return (
     <aside className="editor-chat-panel" aria-label="AI assistant">
       <div className="chat-panel-accent-line" aria-hidden="true" />
@@ -290,6 +504,12 @@ export function EditorChatPanel({ docId, onDocumentUpdated }: EditorChatPanelPro
             aria-haspopup="listbox"
             aria-expanded={agentMenuOpen}
           >
+            <span
+              className="agent-dot"
+              style={{ background: agent.color, boxShadow: `0 0 6px ${agent.color}` }}
+              aria-hidden="true"
+            />
+            <span className="agent-name">{agent.name}</span>
             <span className="agent-dot" aria-hidden="true" />
             <span className="agent-name">{selectedAgent?.name || 'Select agent'}</span>
             <svg
@@ -316,7 +536,14 @@ export function EditorChatPanel({ docId, onDocumentUpdated }: EditorChatPanelPro
                     className={`agent-option ${a.id === selectedAgent?.id ? 'agent-option--active' : ''}`}
                     onClick={() => handleAgentSelect(a)}
                   >
-                    <span className="agent-option-name">{a.name}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span
+                        className="agent-dot"
+                        style={{ background: a.color, boxShadow: `0 0 6px ${a.color}` }}
+                        aria-hidden="true"
+                      />
+                      <span className="agent-option-name">{a.name}</span>
+                    </div>
                     <span className="agent-option-desc">{a.description}</span>
                   </button>
                 </li>
@@ -325,29 +552,41 @@ export function EditorChatPanel({ docId, onDocumentUpdated }: EditorChatPanelPro
           )}
         </div>
 
-        <button
-          type="button"
-          className="chat-panel-icon-btn"
-          onClick={handleReset}
-          aria-label="Reset conversation"
-          title="Reset conversation"
-        >
-          <svg
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
+        <div style={{ display: 'flex', gap: '4px' }}>
+          <button
+            type="button"
+            className="chat-panel-icon-btn"
+            onClick={() => setView('history')}
+            title="Chat history"
           >
-            <path d="M3 12a9 9 0 1 0 3-6.7L3 8" />
-            <polyline points="3 3 3 8 8 8" />
-          </svg>
-        </button>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <polyline points="12 6 12 12 16 14" />
+            </svg>
+          </button>
+          <button
+            type="button"
+            className="chat-panel-icon-btn"
+            onClick={handleNewChat}
+            title="New chat"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19" />
+              <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+          </button>
+        </div>
       </header>
 
+      <div className="chat-panel-messages">
+        {messages.map((m) => {
+          if (m.role === 'system') {
+            return (
+              <div key={m.id} className="chat-system">
+                <span className="chat-system-text">{m.content}</span>
+              </div>
+            )
+          }
       {selectedAgent && (
         <div className="agent-info">
           <p className="agent-description">{selectedAgent.description}</p>
@@ -375,7 +614,10 @@ export function EditorChatPanel({ docId, onDocumentUpdated }: EditorChatPanelPro
             return (
               <div key={m.id} className="chat-message chat-message--ai">
                 <div className="chat-avatar" aria-hidden="true">
-                  <span className="chat-avatar-dot" />
+                  <span
+                    className="chat-avatar-dot"
+                    style={{ background: agent.color, boxShadow: `0 0 4px ${agent.color}` }}
+                  />
                 </div>
                 <div className="chat-bubble chat-bubble--ai">
                   <p className="chat-text">{m.content || (isStreaming ? '...' : '')}</p>

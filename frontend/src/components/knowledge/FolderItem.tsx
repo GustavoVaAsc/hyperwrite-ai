@@ -1,6 +1,16 @@
-import { type JSX, useState } from 'react'
+import { type JSX } from 'react'
 import type { KnowledgeFolder } from '../../types/knowledge'
-import { ConfirmModal } from '../modals/ConfirmModal'
+
+function IconTrash() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="3 6 5 6 21 6" />
+      <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+      <path d="M10 11v6M14 11v6" />
+      <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+    </svg>
+  )
+}
 
 interface FolderItemProps {
   folder: KnowledgeFolder
@@ -11,21 +21,6 @@ interface FolderItemProps {
 }
 
 export function FolderItem({ folder, isSelected, onSelect, onDelete, onUpload }: FolderItemProps): JSX.Element {
-  const [isDeleting, setIsDeleting] = useState(false)
-  const [showConfirm, setShowConfirm] = useState(false)
-
-  const handleDelete = async () => {
-    setIsDeleting(true)
-    try {
-      await onDelete(folder.id)
-    } catch {
-      // Error handled by parent
-    } finally {
-      setIsDeleting(false)
-      setShowConfirm(false)
-    }
-  }
-
   const handleUpload = (e: React.MouseEvent) => {
     e.stopPropagation()
     onUpload(folder)
@@ -60,26 +55,14 @@ export function FolderItem({ folder, isSelected, onSelect, onDelete, onUpload }:
             className="action-btn delete-btn"
             onClick={(e) => {
               e.stopPropagation()
-              setShowConfirm(true)
+              onDelete(folder.id)
             }}
-            disabled={isDeleting}
             title="Delete folder"
           >
-            <svg viewBox="0 0 24 24" fill="currentColor">
-              <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
-            </svg>
+            <IconTrash />
           </button>
         </div>
       </div>
-
-      {showConfirm && (
-        <ConfirmModal
-          title={`Delete "${folder.name}"?`}
-          message="This will permanently delete the folder and all its files. This action cannot be undone."
-          onConfirm={handleDelete}
-          onCancel={() => setShowConfirm(false)}
-        />
-      )}
     </>
   )
 }

@@ -26,7 +26,6 @@ body:has(.knowledge-page) #root {
   border: none;
 }
 
-/* ── Layout de Knowledge ────────────────────────────── */
 .knowledge-page {
   height: 100vh;
   background: var(--bg-deep);
@@ -38,7 +37,6 @@ body:has(.knowledge-page) #root {
   overflow-y: auto;
 }
 
-/* ── Custom Scrollbar ───────────────────────────────── */
 .knowledge-page::-webkit-scrollbar {
   width: 8px;
 }
@@ -64,7 +62,6 @@ body:has(.knowledge-page) #root {
   background-size: 40px 40px;
 }
 
-/* ── Glow Orbs ──────────────────────────────────────── */
 .glow {
   position: fixed;
   border-radius: 50%;
@@ -76,7 +73,6 @@ body:has(.knowledge-page) #root {
 .glow-cyan { width: 300px; height: 300px; bottom: -60px; left: -60px; background: rgba(6, 182, 212, 0.14); }
 .glow-pink { width: 200px; height: 200px; top: 40%; left: 30%; background: rgba(232, 121, 249, 0.08); }
 
-/* ── NavBar Integrado ───────────────────────────────── */
 .knowledge-nav {
   display: flex;
   align-items: center;
@@ -120,7 +116,6 @@ body:has(.knowledge-page) #root {
   gap: 4px;
 }
 
-/* ── Contenido Principal ────────────────────────────── */
 .knowledge-main {
   flex: 1;
   display: flex;
@@ -146,7 +141,7 @@ body:has(.knowledge-page) #root {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
+  margin-bottom: 8px;
 }
 
 .knowledge-title-wrapper {
@@ -171,7 +166,49 @@ body:has(.knowledge-page) #root {
   background-clip: text;
 }
 
-/* ── Botones ────────────────────────────────────────── */
+.knowledge-search {
+  position: relative;
+  margin-top: 24px;
+}
+
+.knowledge-search svg {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+}
+
+.knowledge-search input {
+  width: 100%;
+  padding: 14px 16px 14px 44px;
+  background: rgba(10, 1, 24, 0.4);
+  border: 1px solid var(--border-sub);
+  border-radius: 12px;
+  outline: none;
+  color: var(--text-primary);
+  font-size: 14px;
+  font-family: var(--font-mono);
+  transition: border-color 0.2s, box-shadow 0.2s;
+  box-sizing: border-box;
+}
+
+.knowledge-search input::placeholder {
+  color: rgba(155, 143, 190, 0.5);
+}
+
+.knowledge-search input:focus {
+  border-color: var(--purple);
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.18);
+}
+
+.knowledge-separator {
+  width: 100%;
+  height: 1px;
+  background: var(--border-sub);
+  margin: 28px 0 32px;
+}
+
 .knowledge-page .btn-primary {
   display: flex;
   align-items: center;
@@ -217,7 +254,6 @@ body:has(.knowledge-page) #root {
   color: var(--pink);
 }
 
-/* ── Grid de Tarjetas (Archivos y Carpetas) ─────────── */
 .knowledge-page .folder-grid,
 .knowledge-page .file-list {
   display: grid;
@@ -238,12 +274,13 @@ body:has(.knowledge-page) #root {
   background: var(--border-sub);
   border: none;
   padding: 20px;
-  padding-right: 56px;
+  padding-right: 92px;
   display: flex;
-  align-items: center;
+  align-items: center !important;
   gap: 16px;
   box-sizing: border-box;
   width: 100%;
+  min-height: 88px;
 }
 
 .knowledge-page .folder-item:hover,
@@ -289,7 +326,6 @@ body:has(.knowledge-page) #root {
   z-index: -1;
 }
 
-/* Inner elements override */
 .knowledge-page .folder-icon,
 .knowledge-page .file-icon {
   width: 48px;
@@ -303,7 +339,7 @@ body:has(.knowledge-page) #root {
   flex-shrink: 0;
   color: var(--purple);
   transition: background 0.2s, border-color 0.2s, color 0.2s;
-  z-index: 1;
+  z-index: 2;
 }
 
 .knowledge-page .folder-icon svg,
@@ -329,8 +365,10 @@ body:has(.knowledge-page) #root {
   gap: 5px;
   min-width: 0;
   justify-content: center;
-  margin-top: 2px;
-  z-index: 1;
+  align-items: center;
+  text-align: center;
+  margin-top: 0;
+  z-index: 2;
 }
 
 .knowledge-page .folder-name,
@@ -342,7 +380,8 @@ body:has(.knowledge-page) #root {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  line-height: 1.1;
+  line-height: 1.4;
+  max-width: 100%;
 }
 
 .knowledge-page .folder-meta,
@@ -364,7 +403,7 @@ body:has(.knowledge-page) #root {
   right: 16px;
   top: 50%;
   transform: translateY(-50%);
-  z-index: 10;
+  z-index: 100;
   transition: opacity 0.2s;
 }
 
@@ -373,7 +412,9 @@ body:has(.knowledge-page) #root {
   opacity: 1;
 }
 
-.knowledge-page .action-btn {
+.knowledge-page .action-btn,
+.knowledge-page .folder-actions button,
+.knowledge-page .file-actions button {
   background: none;
   border: 1px solid transparent;
   color: var(--text-muted);
@@ -387,20 +428,30 @@ body:has(.knowledge-page) #root {
   transition: opacity 0.2s, background 0.2s, color 0.2s, border-color 0.2s, transform 0.15s;
 }
 
-.knowledge-page .action-btn:hover {
+.knowledge-page .folder-actions button svg,
+.knowledge-page .file-actions button svg {
+  width: 16px;
+  height: 16px;
+}
+
+.knowledge-page .action-btn:hover,
+.knowledge-page .folder-actions button:hover,
+.knowledge-page .file-actions button:hover {
   background: rgba(124, 58, 237, 0.12);
   color: var(--text-primary);
   border-color: rgba(124, 58, 237, 0.3);
   transform: scale(1.1);
 }
 
-.knowledge-page .action-btn.delete-btn:hover {
+.knowledge-page .action-btn.delete-btn:hover,
+.knowledge-page .folder-actions button:last-child:hover,
+.knowledge-page .file-actions button:last-child:hover {
   background: rgba(232, 121, 249, 0.12);
   color: var(--pink);
   border-color: rgba(232, 121, 249, 0.3);
+  transform: scale(1.1);
 }
 
-/* ── Estados Vacíos y de Carga ──────────────────────── */
 .knowledge-page .empty-state {
   text-align: center;
   padding: 72px 24px;
@@ -462,3 +513,19 @@ body:has(.knowledge-page) #root {
   letter-spacing: 0.03em;
 }
 .knowledge-page .error-state { color: var(--pink); }
+
+.upload-indicator {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: rgba(124, 58, 237, 0.85);
+  color: white;
+  padding: 12px 24px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-family: var(--font-display);
+  font-weight: 600;
+  box-shadow: 0 8px 30px rgba(124, 58, 237, 0.45);
+  z-index: 100;
+  backdrop-filter: blur(10px);
+}

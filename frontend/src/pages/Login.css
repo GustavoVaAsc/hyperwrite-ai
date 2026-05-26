@@ -335,7 +335,6 @@ body:has(.login-page) #root {
   box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.18);
 }
 
-/* Chrome autofill override */
 .login-page .input-wrap input:-webkit-autofill,
 .login-page .input-wrap input:-webkit-autofill:hover,
 .login-page .input-wrap input:-webkit-autofill:focus {

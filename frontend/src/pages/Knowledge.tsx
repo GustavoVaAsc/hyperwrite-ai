@@ -12,6 +12,27 @@ import { useNotificationStore } from '../store/notificationStore'
 import { ERROR_MESSAGES, UI_COPY } from '../constants/app'
 import type { KnowledgeFolder, KnowledgeFile } from '../types/knowledge'
 import { deleteFolder } from '../services/knowledgeService'
+import './Knowledge.css'
+
+function IconSearch() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="11" cy="11" r="8" />
+      <line x1="21" y1="21" x2="16.65" y2="16.65" />
+    </svg>
+  )
+}
+
+function IconTrash() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="3 6 5 6 21 6" />
+      <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+      <path d="M10 11v6M14 11v6" />
+      <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+    </svg>
+  )
+}
 
 export function Knowledge(): JSX.Element {
   const navigate = useNavigate()
@@ -28,7 +49,6 @@ export function Knowledge(): JSX.Element {
     removeFile,
     uploadFileToFolder,
     goBack,
-    setFolders,
   } = useKnowledge()
   const addAlert = useNotificationStore((s) => s.addAlert)
 
@@ -36,25 +56,38 @@ export function Knowledge(): JSX.Element {
   const [newFolderName, setNewFolderName] = useState('')
   const [selectedFile, setSelectedFile] = useState<KnowledgeFile | null>(null)
   const [uploadTargetFolder, setUploadTargetFolder] = useState<KnowledgeFolder | null>(null)
+  const [deleteFolderConfirm, setDeleteFolderConfirm] = useState<{ show: boolean; folder: KnowledgeFolder | null }>({ show: false, folder: null })
   const [deleteConfirm, setDeleteConfirm] = useState<{ show: boolean; file: KnowledgeFile | null }>({ show: false, file: null })
+  const [searchQuery, setSearchQuery] = useState('')
 
   useEffect(() => {
     loadFolders()
   }, [loadFolders])
 
   const handleFolderSelect = useCallback((folder: KnowledgeFolder) => {
+    setSearchQuery('')
     loadFolderDetail(folder.id)
   }, [loadFolderDetail])
 
   const handleDeleteFolder = async (folderId: string) => {
-    const originalFolders = folders
-    setFolders((prev) => prev.filter((f) => f.id !== folderId))
+    const folder = folders.find((f) => f.id === folderId) || null
+    setDeleteFolderConfirm({ show: true, folder })
+  }
+
+  const handleConfirmFolderDelete = async () => {
+    if (!deleteFolderConfirm.folder) return
     try {
-      await deleteFolder(folderId)
+      await deleteFolder(deleteFolderConfirm.folder.id)
+      loadFolders()
     } catch {
-      setFolders(originalFolders)
       addAlert('error', ERROR_MESSAGES.DELETE_FOLDER)
+    } finally {
+      setDeleteFolderConfirm({ show: false, folder: null })
     }
+  }
+
+  const handleCancelFolderDelete = () => {
+    setDeleteFolderConfirm({ show: false, folder: null })
   }
 
   const handleDeleteFileClick = useCallback((file: KnowledgeFile) => {
@@ -74,6 +107,11 @@ export function Knowledge(): JSX.Element {
 
   const handleCancelDelete = () => {
     setDeleteConfirm({ show: false, file: null })
+  }
+
+  const handleGoBack = () => {
+    setSearchQuery('')
+    goBack()
   }
 
   const handleCreateFolder = async () => {
@@ -117,6 +155,16 @@ export function Knowledge(): JSX.Element {
     navigate({ to: '/login' })
   }
 
+  const filteredFolders = folders.filter((folder) => {
+    const query = searchQuery.toLowerCase()
+    return folder.name.toLowerCase().startsWith(query)
+  })
+
+  const filteredFiles = currentFolder ? currentFolder.files.filter((file) => {
+    const query = searchQuery.toLowerCase()
+    return file.original_name.toLowerCase().startsWith(query)
+  }) : []
+
   return (
     <div className="knowledge-page">
       <div className="knowledge-grid-bg" />
@@ -131,11 +179,16 @@ export function Knowledge(): JSX.Element {
         </a>
         <div className="knowledge-nav-links">
           <a href="/files" className="nav-link" onClick={(e) => { e.preventDefault(); navigate({ to: '/files' }) }}>Files</a>
-          <a href="/knowledge" className="nav-link nav-link--active" onClick={(e) => { e.preventDefault(); navigate({ to: '/knowledge' }) }}>Knowledge</a>
+          <a href="/knowledge" className="nav-link" onClick={(e) => { e.preventDefault(); navigate({ to: '/knowledge' }) }}>Knowledge</a>
           {user && (
             <span className="nav-user">{user.display_name || user.username}</span>
           )}
           <button onClick={handleLogout} className="nav-logout">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width="14" height="14">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+              <polyline points="16 17 21 12 16 7" />
+              <line x1="21" y1="12" x2="9" y2="12" />
+            </svg>
             Logout
           </button>
         </div>
@@ -146,7 +199,7 @@ export function Knowledge(): JSX.Element {
           <div className="knowledge-header">
             <div className="knowledge-title-wrapper">
               {currentFolder ? (
-                <button className="btn-back" onClick={goBack}>
+                <button className="btn-back" onClick={handleGoBack}>
                   <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
                     <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z" />
                   </svg>
@@ -177,20 +230,46 @@ export function Knowledge(): JSX.Element {
             </div>
           </div>
 
+          {((!currentFolder && folders.length > 0) || (currentFolder && currentFolder.files.length > 0)) && (
+            <div className="knowledge-search">
+              <IconSearch />
+              <input
+                type="text"
+                placeholder={currentFolder ? "Search files..." : "Search folders..."}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+          )}
+
+          <div className="knowledge-separator" />
+
           {loading && <div className="loading-state">Loading...</div>}
           {error && <div className="error-state">{error}</div>}
 
         {!loading && !error && !currentFolder && folders.length === 0 && (
           <div className="empty-state">
-            <FolderEmptyIcon className="empty-icon" />
+            <div className="empty-icon">
+              <FolderEmptyIcon />
+            </div>
             <h3>No folders yet</h3>
             <p>Create a folder to start organizing your knowledge base</p>
           </div>
         )}
 
-        {!loading && !error && !currentFolder && folders.length > 0 && (
+        {!loading && !error && !currentFolder && folders.length > 0 && filteredFolders.length === 0 && (
+          <div className="empty-state">
+            <div className="empty-icon">
+              <IconSearch />
+            </div>
+            <h3>No matching folders</h3>
+            <p>We couldn't find anything matching "{searchQuery}"</p>
+          </div>
+        )}
+
+        {!loading && !error && !currentFolder && filteredFolders.length > 0 && (
           <div className="folder-grid">
-            {folders.map(folder => (
+            {filteredFolders.map(folder => (
               <FolderItem
                 key={folder.id}
                 folder={folder}
@@ -205,14 +284,24 @@ export function Knowledge(): JSX.Element {
 
         {!loading && !error && currentFolder && (
           <div className="file-list">
-            {currentFolder.files.length === 0 ? (
+            {currentFolder.files.length === 0 && filteredFiles.length === 0 && !searchQuery ? (
               <div className="empty-state">
-                <FileEmptyIcon className="empty-icon" />
+                <div className="empty-icon">
+                  <FileEmptyIcon />
+                </div>
                 <h3>No files in this folder</h3>
                 <p>Click upload to add files</p>
               </div>
+            ) : filteredFiles.length === 0 && searchQuery ? (
+              <div className="empty-state">
+                <div className="empty-icon">
+                  <IconSearch />
+                </div>
+                <h3>No matching files</h3>
+                <p>We couldn't find anything matching "{searchQuery}"</p>
+              </div>
             ) : (
-              currentFolder.files.map(file => (
+              filteredFiles.map(file => (
                 <FileItem
                   key={file.id}
                   file={file}
@@ -265,10 +354,37 @@ export function Knowledge(): JSX.Element {
         />
       )}
 
+      {deleteFolderConfirm.show && deleteFolderConfirm.folder && (
+        <ConfirmModal
+          title="Delete Folder"
+          icon={<IconTrash />}
+          message={
+            <>
+              Are you sure you want to delete{' '}
+              <span className="doc-name-pill">
+                {deleteFolderConfirm.folder.name}
+              </span>
+              ? This action cannot be undone.
+            </>
+          }
+          onConfirm={handleConfirmFolderDelete}
+          onCancel={handleCancelFolderDelete}
+        />
+      )}
+
       {deleteConfirm.show && deleteConfirm.file && (
         <ConfirmModal
           title="Delete File"
-          message={`Are you sure you want to delete "${deleteConfirm.file.original_name}"? This action cannot be undone.`}
+          icon={<IconTrash />}
+          message={
+            <>
+              Are you sure you want to delete{' '}
+              <span className="doc-name-pill">
+                {deleteConfirm.file.original_name}
+              </span>
+              ? This action cannot be undone.
+            </>
+          }
           onConfirm={handleConfirmDelete}
           onCancel={handleCancelDelete}
         />

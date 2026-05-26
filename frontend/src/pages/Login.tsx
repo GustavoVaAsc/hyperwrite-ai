@@ -51,6 +51,12 @@ export function Login() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
+
+    if (!formData.username.trim() || !formData.password) {
+      setError('Please fill in all required fields.')
+      return
+    }
+
     setIsLoading(true)
 
     try {
@@ -115,7 +121,7 @@ export function Login() {
           <div className="login-card">
             <div className="card-top-line" />
 
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={handleSubmit} noValidate>
               {error && (
                 <div className="auth-error">
                   <IconAlert />
@@ -132,7 +138,7 @@ export function Login() {
                     type="text"
                     value={formData.username}
                     onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                    placeholder="you@example.com"
+                    placeholder="name@email.com"
                     required
                     autoComplete="username"
                   />
