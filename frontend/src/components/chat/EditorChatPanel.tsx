@@ -89,11 +89,13 @@ export function EditorChatPanel({ docId, onDocumentUpdated }: EditorChatPanelPro
   const [isStreaming, setIsStreaming] = useState(false)
   const [conversationId, setConversationId] = useState<string | null>(null)
   const [skillsModalOpen, setSkillsModalOpen] = useState(false)
+  const [pendingAttachments, setPendingAttachments] = useState<File[]>([])
 
   const wsRef = useRef<WebSocket | null>(null)
   const agentMenuRef = useRef<HTMLDivElement>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const streamBufferRef = useRef('')
 
   const activeSession = sessions.find((s) => s.id === activeSessionId) || sessions[0]
@@ -271,17 +273,23 @@ export function EditorChatPanel({ docId, onDocumentUpdated }: EditorChatPanelPro
 
   const handleSend = useCallback(async () => {
     const trimmed = draft.trim()
-    if (!trimmed || !selectedAgent || isStreaming) return
+    if ((!trimmed && pendingAttachments.length === 0) || !selectedAgent || isStreaming) return
+
+    const fileNames = pendingAttachments.map(f => f.name).join(', ')
+    let messageContent = trimmed
+    if (pendingAttachments.length > 0) {
+      messageContent += messageContent ? `\n\n[Attachments: ${fileNames}]` : `[Attachments: ${fileNames}]`
+    }
 
     const userMsg: Message = {
       id: `user-${Date.now()}`,
       role: 'user',
-      content: trimmed,
+      content: messageContent,
     }
     
     let newTitle = activeSession.title
-    if (activeSession.messages.length <= 1 && trimmed) {
-      newTitle = trimmed.slice(0, 25) + (trimmed.length > 25 ? '...' : '')
+    if (activeSession.messages.length <= 1 && messageContent) {
+      newTitle = messageContent.slice(0, 25) + (messageContent.length > 25 ? '...' : '')
     }
 
     updateActiveSession({
@@ -291,6 +299,7 @@ export function EditorChatPanel({ docId, onDocumentUpdated }: EditorChatPanelPro
     setDraft('')
     setIsStreaming(true)
     streamBufferRef.current = ''
+    setPendingAttachments([])
 
     setMessages((prev) => [...prev, {
       id: `stream-${Date.now()}`,
@@ -329,8 +338,8 @@ export function EditorChatPanel({ docId, onDocumentUpdated }: EditorChatPanelPro
       })
     }
 
-    wsRef.current?.send(JSON.stringify({ type: 'message', content: trimmed }))
-  }, [draft, selectedAgent, isStreaming, conversationId, token, activeSession, updateActiveSession, setMessages])
+    wsRef.current?.send(JSON.stringify({ type: 'message', content: messageContent }))
+  }, [draft, pendingAttachments, selectedAgent, isStreaming, conversationId, token, activeSession, updateActiveSession, setMessages])
 
   const handleNewChat = () => {
     const newSession: ChatSession = {
@@ -422,7 +431,7 @@ export function EditorChatPanel({ docId, onDocumentUpdated }: EditorChatPanelPro
     }
   }
 
-  const canSend = draft.trim().length > 0 && !isStreaming
+  const canSend = (draft.trim().length > 0 || pendingAttachments.length > 0) && !isStreaming
 
   if (view === 'history') {
     return (
@@ -644,7 +653,50 @@ export function EditorChatPanel({ docId, onDocumentUpdated }: EditorChatPanelPro
         <div ref={messagesEndRef} />
       </div>
 
+      {pendingAttachments.length > 0 && (
+        <div className="chat-panel-pending">
+          {pendingAttachments.map((file, i) => (
+            <span key={`${file.name}-${i}`} className="attachment-chip attachment-chip--removable">
+              <span className="attachment-name">{file.name}</span>
+              <button
+                type="button"
+                className="attachment-remove"
+                onClick={() => setPendingAttachments((prev) => prev.filter((_, idx) => idx !== i))}
+                title="Remove attachment"
+              >
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            </span>
+          ))}
+        </div>
+      )}
+
       <div className="chat-panel-input">
+        <input
+          type="file"
+          ref={fileInputRef}
+          style={{ display: 'none' }}
+          multiple
+          onChange={(e) => {
+            if (e.target.files) {
+              setPendingAttachments((prev) => [...prev, ...Array.from(e.target.files!)])
+            }
+            e.target.value = ''
+          }}
+        />
+        <button
+          type="button"
+          className="chat-panel-input-attach"
+          title="Attach file"
+          onClick={() => fileInputRef.current?.click()}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
+          </svg>
+        </button>
         <textarea
           ref={textareaRef}
           className="chat-panel-input-textarea"
