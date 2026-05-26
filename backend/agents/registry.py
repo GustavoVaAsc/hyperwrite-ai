@@ -63,8 +63,8 @@ _CAPS: dict[str, Capability] = {
 AGENTS: dict[str, Agent] = {
     "cientifico": Agent(
         id="cientifico",
-        name="Científico",
-        description="Especialista en textos académicos y técnicos.",
+        name="Scientist",
+        description="Specialist in academic and technical texts.",
         capabilities=[
             _CAPS["resumir"],
             _CAPS["explicar_concepto"],
@@ -74,8 +74,8 @@ AGENTS: dict[str, Agent] = {
     ),
     "narrativo": Agent(
         id="narrativo",
-        name="Narrativo",
-        description="Asistente de escritura creativa y storytelling.",
+        name="Narrative",
+        description="Creative writing and storytelling assistant.",
         capabilities=[
             _CAPS["cambiar_tono"],
             _CAPS["expandir"],
@@ -86,7 +86,7 @@ AGENTS: dict[str, Agent] = {
     "legal": Agent(
         id="legal",
         name="Legal",
-        description="Asistente para redacción jurídica.",
+        description="Legal drafting assistant.",
         capabilities=[
             _CAPS["formalizar"],
             _CAPS["resumir"],

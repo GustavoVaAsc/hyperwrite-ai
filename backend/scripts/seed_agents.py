@@ -8,8 +8,8 @@ from db.models import Agent, AgentCapability
 _AGENTS_DATA = [
     {
         "agent_id": "cientifico",
-        "name": "Científico",
-        "description": "Especialista en textos académicos y técnicos.",
+        "name": "Scientist",
+        "description": "Specialist in academic and technical texts.",
         "system_prompt": (
             "Eres un asistente de escritura científica. Tu prioridad es la precisión, "
             "la claridad y el rigor técnico. Usa terminología adecuada y mantén un "
@@ -45,8 +45,8 @@ _AGENTS_DATA = [
     },
     {
         "agent_id": "narrativo",
-        "name": "Narrativo",
-        "description": "Asistente de escritura creativa y storytelling.",
+        "name": "Narrative",
+        "description": "Creative writing and storytelling assistant.",
         "system_prompt": (
             "Eres un asistente de escritura creativa. Cuidas el ritmo, las imágenes y "
             "la voz narrativa. Respondes únicamente con el texto resultante, sin "
@@ -82,7 +82,7 @@ _AGENTS_DATA = [
     {
         "agent_id": "legal",
         "name": "Legal",
-        "description": "Asistente para redacción jurídica.",
+        "description": "Legal drafting assistant.",
         "system_prompt": (
             "Eres un asistente de redacción jurídica. Usas un registro formal, preciso "
             "y técnicamente correcto. Respondes únicamente con el texto resultante, "
@@ -154,7 +154,28 @@ async def seed_agents():
 
                 print(f"Seeded agent: {agent_data['name']}")
             else:
-                print(f"Agent already exists: {agent_data['name']}")
+                existing.name = agent_data["name"]
+                existing.description = agent_data["description"]
+                existing.system_prompt = agent_data["system_prompt"]
+                
+                # Actualizar capacidades (borrar y recrear para simplificar)
+                await session.execute(
+                    AgentCapability.__table__.delete().where(
+                        AgentCapability.agent_id == existing.id
+                    )
+                )
+                for cap_data in agent_data["capabilities"]:
+                    capability = AgentCapability(
+                        id=uuid.uuid4(),
+                        agent_id=existing.id,
+                        capability_id=cap_data["capability_id"],
+                        name=cap_data["name"],
+                        description=cap_data["description"],
+                        action_template=cap_data["action_template"],
+                    )
+                    session.add(capability)
+                    
+                print(f"Updated existing agent: {agent_data['name']}")
 
         await session.commit()
 
