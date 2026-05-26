@@ -69,6 +69,8 @@ services:
       -ngl 99
       --embeddings
       --pooling mean
+    networks:
+      - hyperconnection
 
   inference-chat:
     image: ghcr.io/ggml-org/llama.cpp:server-cuda
@@ -88,11 +90,14 @@ services:
               count: all
               capabilities: [gpu]
     command: >
-      -m /models/qwen2.5-3b-instruct-q8_0.gguf
-      -c 4096
+      -m /models/qwen2.5-coder-7b-instruct-q5_k_s.gguf
+      -c 16384
       --host 0.0.0.0
       --port 8080
       -ngl 99
+      --jinja
+    networks:
+      - hyperconnection
 
 networks:
   hyperconnection:

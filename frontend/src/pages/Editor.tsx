@@ -63,6 +63,7 @@ export function Editor() {
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const titleTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const imageInputRef = useRef<HTMLInputElement | null>(null)
+  const isExternalUpdateRef = useRef(false)
   const [, forceUpdate] = useState(0)
   const [outline, setOutline] = useState<{ text: string; level: number; pos: number; id: string }[]>([])
 
@@ -225,7 +226,7 @@ useEffect(() => {
   }, [editor, docId])
 
   const handleContentChangeRef = useRef(() => {
-    if (!editor || !docId) return
+    if (!editor || !docId || isExternalUpdateRef.current) return
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current)
     }
@@ -236,7 +237,7 @@ useEffect(() => {
 
   useEffect(() => {
     handleContentChangeRef.current = () => {
-      if (!editor || !docId) return
+      if (!editor || !docId || isExternalUpdateRef.current) return
       if (saveTimeoutRef.current) {
         clearTimeout(saveTimeoutRef.current)
       }
@@ -245,6 +246,13 @@ useEffect(() => {
       }, 1000)
     }
   }, [editor, docId, saveDocument])
+
+  const handleDocumentUpdated = useCallback((content: Record<string, unknown>) => {
+    if (!editor) return
+    isExternalUpdateRef.current = true
+    editor.commands.setContent(content)
+    setTimeout(() => { isExternalUpdateRef.current = false }, 50)
+  }, [editor])
 
   useEffect(() => {
     if (!editor) return
@@ -704,7 +712,7 @@ useEffect(() => {
         <main className="editor-content-area">
           <EditorContent editor={editor} />
         </main>
-        <EditorChatPanel />
+        <EditorChatPanel docId={docId} onDocumentUpdated={handleDocumentUpdated} />
       </div>
 
       {editor && (() => {

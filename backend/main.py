@@ -10,6 +10,7 @@ from documents.images import router as images_router
 from agents.router import router as agents_router
 from agents.streaming import router as agents_ws_router
 from knowledge.router import router as knowledge_router
+from autocomplete.router import router as autocomplete_router
 
 load_dotenv()
 
@@ -39,6 +40,7 @@ app.include_router(images_router)
 app.include_router(agents_router)
 app.include_router(agents_ws_router)
 app.include_router(knowledge_router)
+app.include_router(autocomplete_router)
 
 @app.get("/")
 def read_root():
