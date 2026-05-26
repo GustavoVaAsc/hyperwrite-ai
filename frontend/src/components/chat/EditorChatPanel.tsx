@@ -33,13 +33,12 @@ const AGENTS: Agent[] = [
 ]
 
 type Attachment = { id: string; name: string }
-type Message = {
 interface Agent {
   id: string
-  agent_id: string
   name: string
   description: string
   skills?: Skill[]
+  color?: string
 }
 
 interface Message {
@@ -66,7 +65,13 @@ function buildGreeting(agent: Agent): Message {
   }
 }
 
-export function EditorChatPanel() {
+interface EditorChatPanelProps {
+  docId?: string
+  onDocumentUpdated?: (content: Record<string, unknown>) => void
+}
+
+export function EditorChatPanel({ docId, onDocumentUpdated }: EditorChatPanelProps) {
+  const [agents, setAgents] = useState<Agent[]>([])
   const [sessions, setSessions] = useState<ChatSession[]>([{
     id: `sess-${Date.now()}`,
     title: 'New Chat',
@@ -76,21 +81,10 @@ export function EditorChatPanel() {
   }])
   const [activeSessionId, setActiveSessionId] = useState<string>(sessions[0].id)
   const [view, setView] = useState<'chat' | 'history'>('chat')
-
   const [editingSessionId, setEditingSessionId] = useState<string | null>(null)
   const [editingTitle, setEditingTitle] = useState('')
-
-  const [agentMenuOpen, setAgentMenuOpen] = useState(false)
-interface EditorChatPanelProps {
-  docId?: string
-  onDocumentUpdated?: (content: Record<string, unknown>) => void
-}
-
-export function EditorChatPanel({ docId, onDocumentUpdated }: EditorChatPanelProps) {
-  const [agents, setAgents] = useState<Agent[]>([])
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null)
   const [agentMenuOpen, setAgentMenuOpen] = useState(false)
-  const [messages, setMessages] = useState<Message[]>([])
   const [draft, setDraft] = useState('')
   const [isStreaming, setIsStreaming] = useState(false)
   const [conversationId, setConversationId] = useState<string | null>(null)
@@ -104,7 +98,6 @@ export function EditorChatPanel({ docId, onDocumentUpdated }: EditorChatPanelPro
 
   const activeSession = sessions.find((s) => s.id === activeSessionId) || sessions[0]
   const agentId = activeSession.agentId
-  const messages = activeSession.messages
   const agent = AGENTS.find((a) => a.id === agentId) ?? AGENTS[0]
   const token = useAuthStore((s) => s.accessToken)
 
@@ -112,6 +105,17 @@ export function EditorChatPanel({ docId, onDocumentUpdated }: EditorChatPanelPro
     setSessions((prev) =>
       prev.map((s) => (s.id === activeSessionId ? { ...s, ...updates, updatedAt: Date.now() } : s))
     )
+  }, [activeSessionId])
+
+  const messages = activeSession.messages
+  const setMessages = useCallback((updater: React.SetStateAction<Message[]>) => {
+    setSessions((prev) => prev.map((s) => {
+      if (s.id === activeSessionId) {
+        const nextMsgs = typeof updater === 'function' ? updater(s.messages) : updater
+        return { ...s, messages: nextMsgs, updatedAt: Date.now() }
+      }
+      return s
+    }))
   }, [activeSessionId])
 
   useEffect(() => {
@@ -157,7 +161,16 @@ export function EditorChatPanel({ docId, onDocumentUpdated }: EditorChatPanelPro
     try {
       const res = await fetch(`${getApiUrl()}/api/agentes`, { headers: getHeaders() })
       if (!res.ok) return
-      const data: Agent[] = await res.json()
+      const rawData: Agent[] = await res.json()
+      const data = rawData.map((a) => {
+        const local = AGENTS.find((l) => l.id === a.id)
+        return {
+          ...a,
+          name: local?.name || a.name,
+          description: local?.description || a.description,
+          color: local?.color || 'var(--cyan)'
+        }
+      })
       setAgents(data)
       if (data.length > 0 && !selectedAgent) {
         setSelectedAgent(data[0])
@@ -174,7 +187,16 @@ export function EditorChatPanel({ docId, onDocumentUpdated }: EditorChatPanelPro
     try {
       const res = await fetch(`${getApiUrl()}/api/agentes`, { headers: getHeaders() })
       if (!res.ok) return
-      const data: Agent[] = await res.json()
+      const rawData: Agent[] = await res.json()
+      const data = rawData.map((a) => {
+        const local = AGENTS.find((l) => l.id === a.id)
+        return {
+          ...a,
+          name: local?.name || a.name,
+          description: local?.description || a.description,
+          color: local?.color || 'var(--cyan)'
+        }
+      })
       setAgents(data)
       if (selectedAgent) {
         const updated = data.find((a) => a.id === selectedAgent.id)
@@ -267,20 +289,6 @@ export function EditorChatPanel({ docId, onDocumentUpdated }: EditorChatPanelPro
       messages: [...activeSession.messages, userMsg],
     })
     setDraft('')
-    setPendingFiles([])
-  }, [draft, pendingFiles, activeSession, updateActiveSession])
-
-  const handleNewChat = () => {
-    const newSession: ChatSession = {
-      id: `sess-${Date.now()}`,
-      title: 'New Chat',
-      agentId: AGENTS[0].id,
-      messages: [buildGreeting(AGENTS[0])],
-      updatedAt: Date.now(),
-    }
-    setSessions((prev) => [newSession, ...prev])
-    setActiveSessionId(newSession.id)
-    setView('chat')
     setIsStreaming(true)
     streamBufferRef.current = ''
 
@@ -322,7 +330,24 @@ export function EditorChatPanel({ docId, onDocumentUpdated }: EditorChatPanelPro
     }
 
     wsRef.current?.send(JSON.stringify({ type: 'message', content: trimmed }))
-  }, [draft, selectedAgent, isStreaming, conversationId, token])
+  }, [draft, selectedAgent, isStreaming, conversationId, token, activeSession, updateActiveSession, setMessages])
+
+  const handleNewChat = () => {
+    const newSession: ChatSession = {
+      id: `sess-${Date.now()}`,
+      title: 'New Chat',
+      agentId: selectedAgent?.id || AGENTS[0].id,
+      messages: [buildGreeting(selectedAgent || AGENTS[0])],
+      updatedAt: Date.now(),
+    }
+    setSessions((prev) => [newSession, ...prev])
+    setActiveSessionId(newSession.id)
+    setView('chat')
+    setDraft('')
+    setConversationId(null)
+    wsRef.current?.close()
+    wsRef.current = null
+  }
 
   const handleReset = () => {
     wsRef.current?.close()
@@ -358,7 +383,6 @@ export function EditorChatPanel({ docId, onDocumentUpdated }: EditorChatPanelPro
 
   const handleSaveRename = () => {
     if (editingSessionId && editingTitle.trim()) {
-      updateActiveSession({ title: editingTitle.trim() })
       setSessions((prev) => prev.map((s) => (s.id === editingSessionId ? { ...s, title: editingTitle.trim() } : s)))
     }
     setEditingSessionId(null)
@@ -369,26 +393,11 @@ export function EditorChatPanel({ docId, onDocumentUpdated }: EditorChatPanelPro
     if (e.key === 'Escape') setEditingSessionId(null)
   }
 
-  const handleAgentSelect = (id: string) => {
-    setAgentMenuOpen(false)
-    if (id === agentId) return
-    const next = AGENTS.find((a) => a.id === id)
-    if (!next) return
-    updateActiveSession({
-      agentId: id,
-      messages: [
-        ...activeSession.messages,
-        {
-          id: `switch-${Date.now()}`,
-          role: 'system',
-          content: `Switched to ${next.name}. ${next.description}`,
-        },
-      ],
-    })
   const handleAgentSelect = (agent: Agent) => {
     setAgentMenuOpen(false)
     if (agent.id === selectedAgent?.id) return
     setSelectedAgent(agent)
+    updateActiveSession({ agentId: agent.id })
     wsRef.current?.close()
     wsRef.current = null
     setConversationId(null)
@@ -506,12 +515,10 @@ export function EditorChatPanel({ docId, onDocumentUpdated }: EditorChatPanelPro
           >
             <span
               className="agent-dot"
-              style={{ background: agent.color, boxShadow: `0 0 6px ${agent.color}` }}
+              style={{ background: selectedAgent?.color || agent.color || 'var(--cyan)', boxShadow: `0 0 6px ${selectedAgent?.color || agent.color || 'var(--cyan)'}` }}
               aria-hidden="true"
             />
-            <span className="agent-name">{agent.name}</span>
-            <span className="agent-dot" aria-hidden="true" />
-            <span className="agent-name">{selectedAgent?.name || 'Select agent'}</span>
+            <span className="agent-name">{selectedAgent?.name || agent.name}</span>
             <svg
               className="agent-chevron"
               width="11"
@@ -539,7 +546,7 @@ export function EditorChatPanel({ docId, onDocumentUpdated }: EditorChatPanelPro
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <span
                         className="agent-dot"
-                        style={{ background: a.color, boxShadow: `0 0 6px ${a.color}` }}
+                        style={{ background: a.color || 'var(--cyan)', boxShadow: `0 0 6px ${a.color || 'var(--cyan)'}` }}
                         aria-hidden="true"
                       />
                       <span className="agent-option-name">{a.name}</span>
@@ -578,24 +585,18 @@ export function EditorChatPanel({ docId, onDocumentUpdated }: EditorChatPanelPro
         </div>
       </header>
 
-      <div className="chat-panel-messages">
-        {messages.map((m) => {
-          if (m.role === 'system') {
-            return (
-              <div key={m.id} className="chat-system">
-                <span className="chat-system-text">{m.content}</span>
-              </div>
-            )
-          }
       {selectedAgent && (
         <div className="agent-info">
-          <p className="agent-description">{selectedAgent.description}</p>
-          <div className="agent-skills-tags">
-            {selectedAgent.skills?.map((skill) => (
-              <span key={skill.id} className="skill-tag" title={skill.description}>
-                {skill.name}
-              </span>
-            ))}
+          {selectedAgent.skills && selectedAgent.skills.length > 0 && (
+            <div className="agent-skills-tags">
+              {selectedAgent.skills.map((skill) => (
+                <span key={skill.id} className="skill-tag" title={skill.description}>
+                  {skill.name}
+                </span>
+              ))}
+            </div>
+          )}
+          <div className="agent-skills-manage">
             <button
               type="button"
               className="skill-tag skill-tag--manage"
@@ -609,14 +610,21 @@ export function EditorChatPanel({ docId, onDocumentUpdated }: EditorChatPanelPro
       )}
 
       <div className="chat-panel-messages">
-        {messages.filter((m) => m.role !== 'system').map((m) => {
+        {messages.map((m) => {
+          if (m.role === 'system') {
+            return (
+              <div key={m.id} className="chat-system">
+                <span className="chat-system-text">{m.content}</span>
+              </div>
+            )
+          }
           if (m.role === 'assistant') {
             return (
               <div key={m.id} className="chat-message chat-message--ai">
                 <div className="chat-avatar" aria-hidden="true">
                   <span
                     className="chat-avatar-dot"
-                    style={{ background: agent.color, boxShadow: `0 0 4px ${agent.color}` }}
+                    style={{ background: agent.color || 'var(--cyan)', boxShadow: `0 0 4px ${agent.color || 'var(--cyan)'}` }}
                   />
                 </div>
                 <div className="chat-bubble chat-bubble--ai">
