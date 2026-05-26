@@ -1,18 +1,3 @@
-"""
-LLM client — the *only* place provider details live.
-
-To swap to a different local server (llama.cpp, LM Studio, vLLM, OpenAI proper,
-etc.), change the env vars; the code does not need to change. All servers below
-expose an OpenAI-compatible `/v1` API:
-
-    Ollama:    LLM_BASE_URL=http://host.docker.internal:11434/v1
-    llama.cpp: LLM_BASE_URL=http://host.docker.internal:8080/v1
-    LM Studio: LLM_BASE_URL=http://host.docker.internal:1234/v1
-    vLLM:      LLM_BASE_URL=http://host.docker.internal:8000/v1
-    OpenAI:    LLM_BASE_URL=https://api.openai.com/v1 + a real LLM_API_KEY
-
-Retry logic: 3 attempts with exponential backoff (1s, 2s, 4s).
-"""
 from __future__ import annotations
 
 import asyncio
@@ -20,12 +5,15 @@ import json
 import os
 import re
 from collections.abc import AsyncIterator
+from typing import Any
 
-from openai import AsyncOpenAI, APIConnectionError, APIError, APITimeoutError
+from openai import APIConnectionError, APIError, APITimeoutError, AsyncOpenAI
+
+from .prompts import TOOL_SYSTEM_PROMPT
 
 
-class LLMError(RuntimeError):
-    """Raised when the LLM call fails (unreachable, timeout, bad response, ...)."""
+class LLMError(Exception):
+    pass
 
 
 def _extract_json_from_content(content: str) -> tuple[str, list[dict] | None]:
@@ -48,8 +36,88 @@ def _extract_json_from_content(content: str) -> tuple[str, list[dict] | None]:
             pass
 
     if not tool_calls:
-        tool_call_pattern = r'\{"name":\s*"(\w+)",\s*"arguments":\s*(\{[^}]*(?:\{[^}]*\}[^}]*)*\})\}'
-        for match in re.finditer(tool_call_pattern, content):
+        code_block_pattern = r'```(?:\w+)?\s*\n?([\s\S]*?)\n?\s*```'
+        for match in re.finditer(code_block_pattern, content):
+            inner = match.group(1).strip()
+            if not inner:
+                continue
+            for pattern in [
+                r'^<(\w+)\s+(.*)/>\s*$',
+                r'^<(\w+)\s*([^>]*)>(.*?)</\1>\s*$',
+            ]:
+                m = re.match(pattern, inner, re.DOTALL)
+                if m:
+                    tag = m.group(1)
+                    if tag not in ("insert_text", "replace_content", "rag_lookup", "web_search", "insert_formula", "insert_table", "format_text"):
+                        continue
+                    attrs_str = m.group(2)
+                    inner_content = m.group(3).strip() if m.lastindex and m.group(3) else ""
+                    try:
+                        args = {}
+                        for arg_match in re.finditer(r'(\w+)="([^"]*)"', attrs_str):
+                            args[arg_match.group(1)] = arg_match.group(2)
+                        if inner_content:
+                            args["text"] = inner_content
+                        tool_calls = [{
+                            "id": f"call_{abs(hash(tag)) % (10**9)}",
+                            "name": tag,
+                            "arguments": json.dumps(args),
+                        }]
+                        content = content[:match.start()] + content[match.end():]
+                        break
+                    except Exception:
+                        continue
+            if tool_calls:
+                break
+
+    if not tool_calls:
+        xml_tool_pattern = r'<(\w+)\s+(.*?)/>'
+        for match in re.finditer(xml_tool_pattern, content):
+            tag_name = match.group(1)
+            attrs_str = match.group(2)
+            if tag_name not in ("insert_text", "replace_content", "rag_lookup", "web_search", "insert_formula", "insert_table", "format_text"):
+                continue
+            try:
+                args = {}
+                for arg_match in re.finditer(r'(\w+)="([^"]*)"', attrs_str):
+                    args[arg_match.group(1)] = arg_match.group(2)
+                tool_calls = [{
+                    "id": f"call_{abs(hash(tag_name)) % (10**9)}",
+                    "name": tag_name,
+                    "arguments": json.dumps(args),
+                }]
+                content = content[:match.start()] + content[match.end():]
+                break
+            except Exception:
+                continue
+
+    if not tool_calls:
+        xml_multiline_pattern = r'<(\w+)\s*([^>]*)>(.*?)</\1>'
+        for match in re.finditer(xml_multiline_pattern, content, re.DOTALL):
+            tag_name = match.group(1)
+            attrs_str = match.group(2)
+            inner_content = match.group(3).strip()
+            if tag_name not in ("insert_text", "replace_content", "rag_lookup", "web_search", "insert_formula", "insert_table", "format_text"):
+                continue
+            try:
+                args = {}
+                for arg_match in re.finditer(r'(\w+)="([^"]*)"', attrs_str):
+                    args[arg_match.group(1)] = arg_match.group(2)
+                if inner_content:
+                    args["text"] = inner_content
+                tool_calls = [{
+                    "id": f"call_{abs(hash(tag_name)) % (10**9)}",
+                    "name": tag_name,
+                    "arguments": json.dumps(args),
+                }]
+                content = content[:match.start()] + content[match.end():]
+                break
+            except Exception:
+                continue
+
+    if not tool_calls:
+        tool_call_pattern = r'\{"name":\s*"(\w+)",\s*"arguments":\s*(\{.*?\})\s*\}'
+        for match in re.finditer(tool_call_pattern, content, re.DOTALL):
             try:
                 name = match.group(1)
                 args = json.loads(match.group(2))
@@ -62,49 +130,6 @@ def _extract_json_from_content(content: str) -> tuple[str, list[dict] | None]:
                 break
             except json.JSONDecodeError:
                 continue
-
-    if not tool_calls:
-        xml_tool_pattern = r'<(\w+)\s+([^>]+)/>'
-        for match in re.finditer(xml_tool_pattern, content):
-            tag_name = match.group(1)
-            attrs_str = match.group(2)
-            if tag_name in ("insert_text", "replace_content", "rag_lookup", "web_search", "insert_formula", "insert_table", "format_text"):
-                try:
-                    args = {}
-                    for arg_match in re.finditer(r'(\w+)=\"(.*?)\"(?:\s|$)', attrs_str):
-                        args[arg_match.group(1)] = arg_match.group(2)
-                    tool_calls = [{
-                        "id": f"call_{abs(hash(tag_name)) % (10**9)}",
-                        "name": tag_name,
-                        "arguments": json.dumps(args),
-                    }]
-                    content = content[:match.start()] + content[match.end():]
-                    break
-                except Exception:
-                    continue
-
-    if not tool_calls:
-        xml_multiline_pattern = r'<(\w+)\s*([^>]*)>(.*?)</\1>'
-        for match in re.finditer(xml_multiline_pattern, content, re.DOTALL):
-            tag_name = match.group(1)
-            attrs_str = match.group(2)
-            inner_content = match.group(3).strip()
-            if tag_name in ("insert_text", "replace_content", "rag_lookup", "web_search", "insert_formula", "insert_table", "format_text"):
-                try:
-                    args = {}
-                    for arg_match in re.finditer(r'(\w+)=\"(.*?)\"(?:\s|$)', attrs_str):
-                        args[arg_match.group(1)] = arg_match.group(2)
-                    if inner_content:
-                        args["text"] = inner_content
-                    tool_calls = [{
-                        "id": f"call_{abs(hash(tag_name)) % (10**9)}",
-                        "name": tag_name,
-                        "arguments": json.dumps(args),
-                    }]
-                    content = content[:match.start()] + content[match.end():]
-                    break
-                except Exception:
-                    continue
 
     if not tool_calls:
         bare_json_pattern = r'\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}'
@@ -172,7 +197,7 @@ async def _retry_complete(messages: list[dict[str, str]], max_retries: int = 3) 
 
 
 async def complete(messages: list[dict[str, str]]) -> str:
-    """One-shot completion. Returns the full assistant message text."""
+    """Non-streaming completion."""
     return await _retry_complete(messages)
 
 

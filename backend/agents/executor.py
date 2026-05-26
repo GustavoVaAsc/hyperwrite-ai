@@ -96,7 +96,8 @@ class AgentExecutor:
                     else:
                         result = await tool.execute(**tool_args)
                 except Exception as exc:
-                    result = f"Tool execution error: {exc}"
+                    import traceback
+                    result = f"Tool execution error: {exc}\n{traceback.format_exc()}"
 
                 messages.append({
                     "role": "tool",

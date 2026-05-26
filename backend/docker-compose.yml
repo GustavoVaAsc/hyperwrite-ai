@@ -69,8 +69,6 @@ services:
       -ngl 99
       --embeddings
       --pooling mean
-    networks:
-      - hyperconnection
 
   inference-chat:
     image: ghcr.io/ggml-org/llama.cpp:server-cuda
@@ -96,8 +94,6 @@ services:
       --port 8080
       -ngl 99
       --jinja
-    networks:
-      - hyperconnection
 
 networks:
   hyperconnection:
